@@ -1,0 +1,358 @@
+File /root/.tvm_test_data/data/imagenet_cat.png exists, skip.
+281
+def @main(%input.1: Tensor[(1, 3, 224, 224), float32], %fc.weight: Tensor[(1000, 512), float32], %fc.bias: Tensor[(1000), float32], %v193: Tensor[(64, 3, 7, 7), float32], %v194: Tensor[(64), float32], %v196: Tensor[(64, 64, 3, 3), float32], %v197: Tensor[(64), float32], %v199: Tensor[(64, 64, 3, 3), float32], %v200: Tensor[(64), float32], %v202: Tensor[(64, 64, 3, 3), float32], %v203: Tensor[(64), float32], %v205: Tensor[(64, 64, 3, 3), float32], %v206: Tensor[(64), float32], %v208: Tensor[(128, 64, 3, 3), float32], %v209: Tensor[(128), float32], %v211: Tensor[(128, 128, 3, 3), float32], %v212: Tensor[(128), float32], %v214: Tensor[(128, 64, 1, 1), float32], %v215: Tensor[(128), float32], %v217: Tensor[(128, 128, 3, 3), float32], %v218: Tensor[(128), float32], %v220: Tensor[(128, 128, 3, 3), float32], %v221: Tensor[(128), float32], %v223: Tensor[(256, 128, 3, 3), float32], %v224: Tensor[(256), float32], %v226: Tensor[(256, 256, 3, 3), float32], %v227: Tensor[(256), float32], %v229: Tensor[(256, 128, 1, 1), float32], %v230: Tensor[(256), float32], %v232: Tensor[(256, 256, 3, 3), float32], %v233: Tensor[(256), float32], %v235: Tensor[(256, 256, 3, 3), float32], %v236: Tensor[(256), float32], %v238: Tensor[(512, 256, 3, 3), float32], %v239: Tensor[(512), float32], %v241: Tensor[(512, 512, 3, 3), float32], %v242: Tensor[(512), float32], %v244: Tensor[(512, 256, 1, 1), float32], %v245: Tensor[(512), float32], %v247: Tensor[(512, 512, 3, 3), float32], %v248: Tensor[(512), float32], %v250: Tensor[(512, 512, 3, 3), float32], %v251: Tensor[(512), float32]) {
+  %0 = nn.conv2d(%input.1, %v193, strides=[2, 2], padding=[3, 3, 3, 3], kernel_size=[7, 7]);
+  %1 = nn.bias_add(%0, %v194);
+  %2 = nn.relu(%1);
+  %3 = nn.max_pool2d(%2, pool_size=[3, 3], strides=[2, 2], padding=[1, 1, 1, 1]);
+  %4 = nn.conv2d(%3, %v196, padding=[1, 1, 1, 1], kernel_size=[3, 3]);
+  %5 = nn.bias_add(%4, %v197);
+  %6 = nn.relu(%5);
+  %7 = nn.conv2d(%6, %v199, padding=[1, 1, 1, 1], kernel_size=[3, 3]);
+  %8 = nn.bias_add(%7, %v200);
+  %9 = add(%8, %3);
+  %10 = nn.relu(%9);
+  %11 = nn.conv2d(%10, %v202, padding=[1, 1, 1, 1], kernel_size=[3, 3]);
+  %12 = nn.bias_add(%11, %v203);
+  %13 = nn.relu(%12);
+  %14 = nn.conv2d(%13, %v205, padding=[1, 1, 1, 1], kernel_size=[3, 3]);
+  %15 = nn.bias_add(%14, %v206);
+  %16 = add(%15, %10);
+  %17 = nn.relu(%16);
+  %18 = nn.conv2d(%17, %v208, strides=[2, 2], padding=[1, 1, 1, 1], kernel_size=[3, 3]);
+  %19 = nn.bias_add(%18, %v209);
+  %20 = nn.relu(%19);
+  %21 = nn.conv2d(%20, %v211, padding=[1, 1, 1, 1], kernel_size=[3, 3]);
+  %22 = nn.conv2d(%17, %v214, strides=[2, 2], padding=[0, 0, 0, 0], kernel_size=[1, 1]);
+  %23 = nn.bias_add(%21, %v212);
+  %24 = nn.bias_add(%22, %v215);
+  %25 = add(%23, %24);
+  %26 = nn.relu(%25);
+  %27 = nn.conv2d(%26, %v217, padding=[1, 1, 1, 1], kernel_size=[3, 3]);
+  %28 = nn.bias_add(%27, %v218);
+  %29 = nn.relu(%28);
+  %30 = nn.conv2d(%29, %v220, padding=[1, 1, 1, 1], kernel_size=[3, 3]);
+  %31 = nn.bias_add(%30, %v221);
+  %32 = add(%31, %26);
+  %33 = nn.relu(%32);
+  %34 = nn.conv2d(%33, %v223, strides=[2, 2], padding=[1, 1, 1, 1], kernel_size=[3, 3]);
+  %35 = nn.bias_add(%34, %v224);
+  %36 = nn.relu(%35);
+  %37 = nn.conv2d(%36, %v226, padding=[1, 1, 1, 1], kernel_size=[3, 3]);
+  %38 = nn.conv2d(%33, %v229, strides=[2, 2], padding=[0, 0, 0, 0], kernel_size=[1, 1]);
+  %39 = nn.bias_add(%37, %v227);
+  %40 = nn.bias_add(%38, %v230);
+  %41 = add(%39, %40);
+  %42 = nn.relu(%41);
+  %43 = nn.conv2d(%42, %v232, padding=[1, 1, 1, 1], kernel_size=[3, 3]);
+  %44 = nn.bias_add(%43, %v233);
+  %45 = nn.relu(%44);
+  %46 = nn.conv2d(%45, %v235, padding=[1, 1, 1, 1], kernel_size=[3, 3]);
+  %47 = nn.bias_add(%46, %v236);
+  %48 = add(%47, %42);
+  %49 = nn.relu(%48);
+  %50 = nn.conv2d(%49, %v238, strides=[2, 2], padding=[1, 1, 1, 1], kernel_size=[3, 3]);
+  %51 = nn.bias_add(%50, %v239);
+  %52 = nn.relu(%51);
+  %53 = nn.conv2d(%52, %v241, padding=[1, 1, 1, 1], kernel_size=[3, 3]);
+  %54 = nn.conv2d(%49, %v244, strides=[2, 2], padding=[0, 0, 0, 0], kernel_size=[1, 1]);
+  %55 = nn.bias_add(%53, %v242);
+  %56 = nn.bias_add(%54, %v245);
+  %57 = add(%55, %56);
+  %58 = nn.relu(%57);
+  %59 = nn.conv2d(%58, %v247, padding=[1, 1, 1, 1], kernel_size=[3, 3]);
+  %60 = nn.bias_add(%59, %v248);
+  %61 = nn.relu(%60);
+  %62 = nn.conv2d(%61, %v250, padding=[1, 1, 1, 1], kernel_size=[3, 3]);
+  %63 = nn.bias_add(%62, %v251);
+  %64 = add(%63, %58);
+  %65 = nn.relu(%64);
+  %66 = nn.global_avg_pool2d(%65);
+  %67 = nn.batch_flatten(%66);
+  %68 = nn.batch_flatten(%67);
+  %69 = nn.dense(%68, %fc.weight, units=1000);
+  %70 = multiply(1f, %fc.bias);
+  add(%69, %70)
+}
+
+op_name:nn.conv2d-107
+op_pre:input.1-0&var
+op_pre:193-3&var
+op_next:nn.bias_add-106&call
+op_name:nn.bias_add-106
+op_pre:nn.conv2d-107&call
+op_pre:194-4&var
+op_next:nn.relu-105&call
+op_name:nn.relu-105
+op_pre:nn.bias_add-106&call
+op_next:nn.max_pool2d-104&call
+op_name:nn.max_pool2d-104
+op_pre:nn.relu-105&call
+op_next:nn.conv2d-103&call
+op_next:add-98&call
+op_name:nn.conv2d-103
+op_pre:nn.max_pool2d-104&call
+op_pre:196-5&var
+op_next:nn.bias_add-102&call
+op_name:nn.bias_add-102
+op_pre:nn.conv2d-103&call
+op_pre:197-6&var
+op_next:nn.relu-101&call
+op_name:nn.relu-101
+op_pre:nn.bias_add-102&call
+op_next:nn.conv2d-100&call
+op_name:nn.conv2d-100
+op_pre:nn.relu-101&call
+op_pre:199-7&var
+op_next:nn.bias_add-99&call
+op_name:nn.bias_add-99
+op_pre:nn.conv2d-100&call
+op_pre:200-8&var
+op_next:add-98&call
+op_name:add-98
+op_pre:nn.bias_add-99&call
+op_pre:nn.max_pool2d-104&call
+op_next:nn.relu-97&call
+op_name:nn.relu-97
+op_pre:add-98&call
+op_next:nn.conv2d-96&call
+op_next:add-91&call
+op_name:nn.conv2d-96
+op_pre:nn.relu-97&call
+op_pre:202-9&var
+op_next:nn.bias_add-95&call
+op_name:nn.bias_add-95
+op_pre:nn.conv2d-96&call
+op_pre:203-10&var
+op_next:nn.relu-94&call
+op_name:nn.relu-94
+op_pre:nn.bias_add-95&call
+op_next:nn.conv2d-93&call
+op_name:nn.conv2d-93
+op_pre:nn.relu-94&call
+op_pre:205-11&var
+op_next:nn.bias_add-92&call
+op_name:nn.bias_add-92
+op_pre:nn.conv2d-93&call
+op_pre:206-12&var
+op_next:add-91&call
+op_name:add-91
+op_pre:nn.bias_add-92&call
+op_pre:nn.relu-97&call
+op_next:nn.relu-90&call
+op_name:nn.relu-90
+op_pre:add-91&call
+op_next:nn.conv2d-89&call
+op_next:nn.conv2d-109&call
+op_name:nn.conv2d-89
+op_pre:nn.relu-90&call
+op_pre:208-13&var
+op_next:nn.bias_add-88&call
+op_name:nn.bias_add-88
+op_pre:nn.conv2d-89&call
+op_pre:209-14&var
+op_next:nn.relu-87&call
+op_name:nn.relu-87
+op_pre:nn.bias_add-88&call
+op_next:nn.conv2d-86&call
+op_name:nn.conv2d-86
+op_pre:nn.relu-87&call
+op_pre:211-15&var
+op_next:nn.bias_add-85&call
+op_name:nn.bias_add-85
+op_pre:nn.conv2d-86&call
+op_pre:212-16&var
+op_next:add-84&call
+op_name:nn.conv2d-109
+op_pre:nn.relu-90&call
+op_pre:214-17&var
+op_next:nn.bias_add-108&call
+op_name:nn.bias_add-108
+op_pre:nn.conv2d-109&call
+op_pre:215-18&var
+op_next:add-84&call
+op_name:add-84
+op_pre:nn.bias_add-85&call
+op_pre:nn.bias_add-108&call
+op_next:nn.relu-83&call
+op_name:nn.relu-83
+op_pre:add-84&call
+op_next:nn.conv2d-82&call
+op_next:add-77&call
+op_name:nn.conv2d-82
+op_pre:nn.relu-83&call
+op_pre:217-19&var
+op_next:nn.bias_add-81&call
+op_name:nn.bias_add-81
+op_pre:nn.conv2d-82&call
+op_pre:218-20&var
+op_next:nn.relu-80&call
+op_name:nn.relu-80
+op_pre:nn.bias_add-81&call
+op_next:nn.conv2d-79&call
+op_name:nn.conv2d-79
+op_pre:nn.relu-80&call
+op_pre:220-21&var
+op_next:nn.bias_add-78&call
+op_name:nn.bias_add-78
+op_pre:nn.conv2d-79&call
+op_pre:221-22&var
+op_next:add-77&call
+op_name:add-77
+op_pre:nn.bias_add-78&call
+op_pre:nn.relu-83&call
+op_next:nn.relu-76&call
+op_name:nn.relu-76
+op_pre:add-77&call
+op_next:nn.conv2d-75&call
+op_next:nn.conv2d-111&call
+op_name:nn.conv2d-75
+op_pre:nn.relu-76&call
+op_pre:223-23&var
+op_next:nn.bias_add-74&call
+op_name:nn.bias_add-74
+op_pre:nn.conv2d-75&call
+op_pre:224-24&var
+op_next:nn.relu-73&call
+op_name:nn.relu-73
+op_pre:nn.bias_add-74&call
+op_next:nn.conv2d-72&call
+op_name:nn.conv2d-72
+op_pre:nn.relu-73&call
+op_pre:226-25&var
+op_next:nn.bias_add-71&call
+op_name:nn.bias_add-71
+op_pre:nn.conv2d-72&call
+op_pre:227-26&var
+op_next:add-70&call
+op_name:nn.conv2d-111
+op_pre:nn.relu-76&call
+op_pre:229-27&var
+op_next:nn.bias_add-110&callThe Relay type checker is unable to show the following types match.
+In particular `meta[TypeRelation][0]
+` does not match `meta[TypeRelation][0]
+`
+
+op_name:nn.bias_add-110
+op_pre:nn.conv2d-111&call
+op_pre:230-28&var
+op_next:add-70&call
+op_name:add-70
+op_pre:nn.bias_add-71&call
+op_pre:nn.bias_add-110&call
+op_next:nn.relu-69&call
+op_name:nn.relu-69
+op_pre:add-70&call
+op_next:nn.conv2d-68&call
+op_next:add-63&call
+op_name:nn.conv2d-68
+op_pre:nn.relu-69&call
+op_pre:232-29&var
+op_next:nn.bias_add-67&call
+op_name:nn.bias_add-67
+op_pre:nn.conv2d-68&call
+op_pre:233-30&var
+op_next:nn.relu-66&call
+op_name:nn.relu-66
+op_pre:nn.bias_add-67&call
+op_next:nn.conv2d-65&call
+op_name:nn.conv2d-65
+op_pre:nn.relu-66&call
+op_pre:235-31&var
+op_next:nn.bias_add-64&call
+op_name:nn.bias_add-64
+op_pre:nn.conv2d-65&call
+op_pre:236-32&var
+op_next:add-63&call
+op_name:add-63
+op_pre:nn.bias_add-64&call
+op_pre:nn.relu-69&call
+op_next:nn.relu-62&call
+op_name:nn.relu-62
+op_pre:add-63&call
+op_next:nn.conv2d-61&call
+op_next:nn.conv2d-113&call
+op_name:nn.conv2d-61
+op_pre:nn.relu-62&call
+op_pre:238-33&var
+op_next:nn.bias_add-60&call
+op_name:nn.bias_add-60
+op_pre:nn.conv2d-61&call
+op_pre:239-34&var
+op_next:nn.relu-59&call
+op_name:nn.relu-59
+op_pre:nn.bias_add-60&call
+op_next:nn.conv2d-58&call
+op_name:nn.conv2d-58
+op_pre:nn.relu-59&call
+op_pre:241-35&var
+op_next:nn.bias_add-57&call
+op_name:nn.bias_add-57
+op_pre:nn.conv2d-58&call
+op_pre:242-36&var
+op_next:add-56&call
+op_name:nn.conv2d-113
+op_pre:nn.relu-62&call
+op_pre:244-37&var
+op_next:nn.bias_add-112&call
+op_name:nn.bias_add-112
+op_pre:nn.conv2d-113&call
+op_pre:245-38&var
+op_next:add-56&call
+op_name:add-56
+op_pre:nn.bias_add-57&call
+op_pre:nn.bias_add-112&call
+op_next:nn.relu-55&call
+op_name:nn.relu-55
+op_pre:add-56&call
+op_next:nn.conv2d-54&call
+op_next:add-49&call
+op_name:nn.conv2d-54
+op_pre:nn.relu-55&call
+op_pre:247-39&var
+op_next:nn.bias_add-53&call
+op_name:nn.bias_add-53
+op_pre:nn.conv2d-54&call
+op_pre:248-40&var
+op_next:nn.relu-52&call
+op_name:nn.relu-52
+op_pre:nn.bias_add-53&call
+op_next:nn.conv2d-51&call
+op_name:nn.conv2d-51
+op_pre:nn.relu-52&call
+op_pre:250-41&var
+op_next:nn.bias_add-50&call
+op_name:nn.bias_add-50
+op_pre:nn.conv2d-51&call
+op_pre:251-42&var
+op_next:add-49&call
+op_name:add-49
+op_pre:nn.bias_add-50&call
+op_pre:nn.relu-55&call
+op_next:nn.relu-48&call
+op_name:nn.relu-48
+op_pre:add-49&call
+op_next:nn.global_avg_pool2d-47&call
+op_name:nn.global_avg_pool2d-47
+op_pre:nn.relu-48&call
+op_next:nn.batch_flatten-46&call
+op_name:nn.batch_flatten-46
+op_pre:nn.global_avg_pool2d-47&call
+op_next:nn.batch_flatten-45&call
+op_name:nn.batch_flatten-45
+op_pre:nn.batch_flatten-46&call
+op_next:nn.dense-44&call
+op_name:nn.dense-44
+op_pre:nn.batch_flatten-45&call
+op_pre:fc.weight-1&var
+op_next:add-43&call
+op_name:multiply-114
+op_pre:const-115&const
+op_pre:fc.bias-2&var
+op_next:add-43&call
+op_name:add-43
+op_pre:nn.dense-44&call
+op_pre:multiply-114&call
+nn.conv2d
+nn.conv2d-107
+note: run with `TVM_BACKTRACE=1` environment variable to display a backtrace.
