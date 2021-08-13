@@ -1,12 +1,17 @@
 # 基于算子的模型运行时间静态估算
 
-Doing and to-do
+Doing 、to-do and done
 > 当前工作：
 >
 >       实现利用TVM执行单个算子，设定为func
+>       问题：TVM的资料相对较少，正在尽快了解
 > 下一步工作：
 > 
 >       利用func代码生成训练集
+> 已经完成：
+>
+>       * TensorFlow/Pytorch => ONNX标准化模型
+>       * 基于TVM对ONNX模型解析为计算图
 
 ## 一、背景及意义
 
