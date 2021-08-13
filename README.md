@@ -100,3 +100,8 @@
     * 仅CPU运算（引入型号），存在内存限制
     * 考虑CPU+GPU运算（不限制显存）
     * 硬件环境整体受限
+
+## 七、简记
+
+## 八、参考资料
+> TVM手册：https://support.huaweicloud.com/odevg-A200_3000/odevg-A200_3000.pdf
