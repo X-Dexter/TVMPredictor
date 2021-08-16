@@ -51,6 +51,7 @@ mod = tvm.ir.IRModule.from_expr(func)
 mod = relay.transform.InferType()(mod)
 shape_dict = {
     v.name_hint : v.checked_type for v in mod["main"].params}
+
 np.random.seed(0)
 params = {}
 for k, v in shape_dict.items():
@@ -81,7 +82,9 @@ output = module.get_output(0)
 # construct_op_graph(mod)
 # profile_resource_usage(params,data_tvm, device=device, target = target)
 
+
 entrance_tuple = mod.functions.items()[0]
+print("-------\n",mod.functions.items(),"\n")
 main_function = entrance_tuple[1]
 
 temp_body2 = tvm.relay.Call(main_function.body.tuple_value.op, main_function.body.tuple_value.args, attrs=main_function.body.tuple_value.attrs, type_args=main_function.body.tuple_value.type_args)
@@ -92,10 +95,11 @@ call_ir_module = tvm.ir.IRModule(functions=call_functions)
 with tvm.transform.PassContext(opt_level=1):
     call_interpreter = relay.build_module.create_executor("graph", call_ir_module, device, target)
 
-print(call_ir_module)
+print("--call_ir_module:\n",call_ir_module,"\n")
 input_args = []
 input_args.append(data_tvm)
-print(params.keys())
+print("--params.keys():\n",params.keys(),"\n")
 res = call_interpreter.evaluate()(*input_args, **params)
 
-print(res)
+print("--output:\n",output,"\n")
+print("--res:\n",res,"\n")

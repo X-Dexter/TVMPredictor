@@ -41,14 +41,13 @@ def conv_block(data, name, channels, kernel_size=(3, 3), strides=(1, 1), padding
     act = relay.nn.relu(data=bn)
     return act
  
- 
 data_shape = (1, 3, 224, 224)
 kernel_shape = (32, 3, 3, 3)
 dtype = "float32"
 data = relay.var("data", shape=data_shape, dtype=dtype)
 act = conv_block(data, "graph", 32, strides=(2, 2))
 func = relay.Function(relay.analysis.free_vars(act),act)
- 
+
 mod = tvm.ir.IRModule.from_expr(func)
 mod = relay.transform.InferType()(mod)
 shape_dict = {
