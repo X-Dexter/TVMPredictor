@@ -8,4 +8,4 @@ C = tvm.te.compute(A.shape, lambda i: A[i] + B[i], name="C")
 print(type(C))  # <class 'tvm.te.tensor.Tensor'>
 print(C)
 
-s = tvm.create_schedule(C.op)
+#s = tvm.create_schedule(C.op)

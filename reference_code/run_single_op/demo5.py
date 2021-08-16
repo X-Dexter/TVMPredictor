@@ -1,7 +1,7 @@
 # export from: https://blog.csdn.net/weixin_39713833/article/details/111389194
 
 import tvm
-from tvm.relay import transform
+# from tvm.relay import transform
 import tvm.relay as relay
 import numpy as np
 from tvm.contrib import graph_runtime
@@ -28,8 +28,7 @@ def conv2d(data, weight=None, **kwargs):
     return relay.nn.conv2d(data, weight, **kwargs)
  
  
-def conv_block(data, name, channels, kernel_size=(3, 3), strides=(1, 1),
-            padding=(1, 1), epsilon=1e-5):
+def conv_block(data, name, channels, kernel_size=(3, 3), strides=(1, 1), padding=(1, 1), epsilon=1e-5):
     conv = conv2d(
         data=data,
         channels=channels,
@@ -50,8 +49,7 @@ data = relay.var("data", shape=data_shape, dtype=dtype)
 act = conv_block(data, "graph", 32, strides=(2, 2))
 func = relay.Function(relay.analysis.free_vars(act),act)
  
- 
-mod = relay.Module.from_expr(func)
+mod = tvm.ir.IRModule.from_expr(func)
 mod = relay.transform.InferType()(mod)
 shape_dict = {
     v.name_hint : v.checked_type for v in mod["main"].params}

@@ -51,7 +51,7 @@ Doing 、to-do and done
 * 通过TVM将ONNX解析为计算图，建立存储结构
     * 已完成
 
-2. 实现对于指定类型算子在指定环境下的运算时间估计。结合深度学习的方法，构建 T~op~ = F(x<sub>1</sub>,x<sub>2</sub>,...,x<sub>n</sub>,y<sub>1</sub>,y<sub>2</sub>,...,y<sub>n</sub>)，其中x<sub>1</sub> ~ x<sub>n</sub>是算子相关的若干参数，y<sub>1</sub> ~ y<sub>n</sub>是描述软硬件层面（环境状态）相关的若干参数
+2. 实现对于指定类型算子在指定环境下的运算时间估计。结合深度学习的方法，构建 T<sub>op</sub> = F(x<sub>1</sub>,x<sub>2</sub>,...,x<sub>n</sub>,y<sub>1</sub>,y<sub>2</sub>,...,y<sub>n</sub>)，其中x<sub>1</sub> ~ x<sub>n</sub>是算子相关的若干参数，y<sub>1</sub> ~ y<sub>n</sub>是描述软硬件层面（环境状态）相关的若干参数
 * 算子层面：
     * 算子规模（为减少状态空间，需限定算子输入/输出规模）：**理论上规模越大，最终模型的描述能力越强**
         * 待估计给定（需结合实际讨论）
