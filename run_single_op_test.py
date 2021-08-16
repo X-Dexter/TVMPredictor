@@ -57,13 +57,9 @@ t1=time.time()-t1_start
 output = module.get_output(0)
 print("--output:\n",output,"\n")
 
-# test code: 验证是否为操作单个算子
+# 测试方法2
 entrance_tuple = model.functions.items()[0]
-# print("-------\n",model.functions.items(),"\n")
-# print("-------\n",entrance_tuple,"\n")
 main_function = entrance_tuple[1]
-# print("-------\n",main_function,"\n")
-
 
 call_body = main_function.body.tuple_value if hasattr(main_function.body,"tuple_value") else main_function.body
 temp_body = tvm.relay.Call(call_body.op, call_body.args, attrs=call_body.attrs, type_args=call_body.type_args)
