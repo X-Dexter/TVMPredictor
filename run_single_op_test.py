@@ -29,7 +29,7 @@ params = {}
 # for k, v in shape_dict.items():
 #     if k == "data":
 #         continue
-#     init_value = np.random.uniform(-1, 1, v.concrete_shape).astype(v.dtype)
+#     init_value = np.random.uniform(-1, 1, v.concrete_shape).astype(v.concrete_shape.dtype)
 #     params[k] = tvm.nd.array(init_value, device=tvm.cpu(0))
 
 # params["input_x"] = tvm.nd.array(np.array((1.0,2.0,3.0),dtype="float32"),device=tvm.cpu(0)) 
@@ -77,7 +77,7 @@ print("--params.keys():\n",params.keys(),"\n")
 
 # 测试时间
 t2_start = time.time()
-res = call_interpreter.evaluate()(*input_args, **params)
+# res = call_interpreter.evaluate()(*input_args, **params)
 t2=time.time()-t2_start
 
 print("--output by model:\n    result:--\n",output,"\n    time",t1,"\n")

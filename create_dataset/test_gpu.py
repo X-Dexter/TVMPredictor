@@ -1,4 +1,4 @@
-# 生成add函数的训练集，原始示例代码
+# 生成add函数的训练集
 
 import time
 import tvm
@@ -8,10 +8,11 @@ import numpy as np
 from tvm.contrib import graph_runtime
 
 dshape = (1000,100,100)
-target_ = "llvm"
-device=tvm.cpu(0)
+target_ = "cuda"
+device = tvm.cuda(0)
 
 x = relay.var("input_x", shape=dshape,dtype="float32")
+
 y = relay.var("input_y", shape=dshape,dtype="float32")
 f = relay.add(x, y)
 
@@ -28,8 +29,8 @@ with relay.build_config(opt_level=3):
 module = graph_runtime.create(graph, lib, device)
 
 for i in range(30):
-    test_input_x = np.random.uniform(-1, 1, size=dshape).astype("float32")
-    test_input_y = np.random.uniform(-1, 1, size=dshape).astype("float32")
+    test_input_x = np.random.uniform(-1, 1, size=x.type_annotation.concrete_shape).astype("float32")
+    test_input_y = np.random.uniform(-1, 1, size=y.type_annotation.concrete_shape).astype("float32")
     module.set_input('input_x', test_input_x)
     module.set_input('input_y', test_input_y)
 
