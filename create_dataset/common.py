@@ -4,6 +4,7 @@ import tvm
 import tvm.relay as relay
 import numpy as np
 from tvm.contrib import graph_runtime
+from tqdm import tqdm
 
 def test_op_time(input_dict,output, target="llvm", device=tvm.cpu(0),cycle_times=200, min_value=-100,max_value=100):
     '''
@@ -53,11 +54,89 @@ def test_op_time(input_dict,output, target="llvm", device=tvm.cpu(0),cycle_times
 
     return total_time/cycle_times
 
-# # test code
-dshape = (100,100,100)
-x = relay.var("input_x", shape=dshape,dtype="float32")
-x.type_annotation.concrete_shape
-y = relay.var("input_y", shape=dshape,dtype="float32")
-f = relay.add(x, y)
+def uniform_sampling(array,sampling=0.1):
+    '''
+    uniform sampling on a list/tuple, sampling gives the hit rate.
+    '''
 
-print("avg:",test_op_time(input_dict={"input_x": (dshape,"float32"), "input_y":(dshape,"float32")},output=f,cycle_times=200))
+    result = []
+    if array is None or len(array) == 0 or sampling<=0.0 or sampling>1.0:
+        return result
+
+    interval = int(1.0/sampling) 
+    i=0
+    while i<len(array):
+        result.append(array[i])
+        i+=interval
+
+    return result
+
+def redress_dimensionality(dimensions):
+    '''
+    Correct the dimension with 0
+    '''
+    result = []
+    for dimension in dimensions:
+        if dimension==0 and len(result)>0:
+            return None                         # 屏蔽中间出现0的shape
+        
+        if dimension>0:
+            result.append(dimension)
+    
+    if len(result)<1:
+        return None
+    else:
+        return tuple(result)
+
+def create_dataset(function, max_shapes, sampling, dtype="float32",file_name="dataset.txt",fold_path="create_dataset/datasets/"):
+    '''
+    The dataset is obtained through uniform sampling. 
+
+    Parameters
+    ----------
+    * function: < function(shape,dtype)>, which can gives the run-time
+    * max_shapes: give the max size of each dimensionality
+    * sampling: sampling/100 gives the hit rate
+    '''
+
+    shapes_in_dimensionality=[]
+    for i in range(len(max_shapes)):
+        shapes_in_dimensionality.append(uniform_sampling(range(max_shapes[i]), sampling[i]))
+
+    # 为避免循环多层嵌套，以自适应高层维度，将嵌套循环展开
+    total_case=1
+    len_shape_in_dimensionality=[]
+    for shape_in_dimensionality in shapes_in_dimensionality:
+        length = len(shape_in_dimensionality)
+        len_shape_in_dimensionality.append(length)
+        total_case *= length
+
+    # 打开文件
+    fo = open(fold_path+file_name, "a")
+    print("--total: ",total_case)
+    for i in tqdm(range(total_case)):
+        shape=[]
+        temp=i
+        for i in range(len(shapes_in_dimensionality)):
+            len_shape=len_shape_in_dimensionality[i]
+            
+            shape.append(shapes_in_dimensionality[i][int(temp%len_shape)])
+            temp = int(temp/len_shape)
+
+        shape=redress_dimensionality(shape)
+        if shape:
+            run_time = function(shape,dtype)
+
+            # 打开一个文件
+            fo.write(" ".join(str(i) for i in shape)+","+str(run_time*1000000)+"\n")
+        
+    # 关闭打开的文件
+    fo.close()
+
+# # test code
+# dshape = (2,0,2)
+# x = relay.var("input_x", shape=dshape,dtype="float32")
+# y = relay.var("input_y", shape=dshape,dtype="float32")
+# f = relay.add(x, y)
+
+# print("avg:",test_op_time(input_dict={"input_x": (dshape,"float32"), "input_y":(dshape,"float32")},output=f,cycle_times=1))
