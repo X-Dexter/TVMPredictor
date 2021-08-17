@@ -19,6 +19,7 @@ Doing 、to-do and done
 >       * TensorFlow/Pytorch => ONNX标准化模型
 >       * 基于TVM对ONNX模型解析为计算图
 >       * 单独执行某个算子
+>       * 已经生成add算子的训练集
 
 ## 一、背景及意义
 
