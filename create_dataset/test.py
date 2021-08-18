@@ -7,13 +7,16 @@ import tvm.relay as relay
 import numpy as np
 from tvm.contrib import graph_runtime
 
-dshape = (1000,100,100)
+dshape1 = (4,2,2)
+dshape2 = (1,5,2)
+dtype="int32"
 target_ = "llvm"
 device=tvm.cpu(0)
 
-x = relay.var("input_x", shape=dshape,dtype="float32")
-y = relay.var("input_y", shape=dshape,dtype="float32")
-f = relay.add(x, y)
+x = relay.var("input_x", shape=dshape1,dtype=dtype)
+y = relay.var("input_y", shape=dshape2,dtype=dtype)
+# f = relay.add(x, y)
+f = relay.nn.batch_matmul(x,y)
 
 func = relay.Function(relay.analysis.free_vars(f), f)
 
@@ -27,15 +30,21 @@ with relay.build_config(opt_level=3):
 # 给模型赋初始值
 module = graph_runtime.create(graph, lib, device)
 
-for i in range(30):
-    test_input_x = np.random.uniform(-1, 1, size=dshape).astype("float32")
-    test_input_y = np.random.uniform(-1, 1, size=dshape).astype("float32")
+for i in range(1):
+    test_input_x = np.random.uniform(1, 6, size=dshape1).astype(dtype)
+    test_input_y = np.random.uniform(1, 6, size=dshape2).astype(dtype)
     module.set_input('input_x', test_input_x)
     module.set_input('input_y', test_input_y)
+
+    print('--input_x:\n', test_input_x)
+    print('--input_y:\n', test_input_y)
 
     # 测试时间
     t1_start = time.time()
     module.run()
     t1=time.time()-t1_start
+
+    output = module.get_output(0)
+    print("--output:\n",output,"\n")
 
     print(t1)

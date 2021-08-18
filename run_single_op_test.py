@@ -57,7 +57,7 @@ t1=time.time()-t1_start
 output = module.get_output(0)
 print("--output:\n",output,"\n")
 
-# 测试方法2
+# 测试方法2，存在问题
 entrance_tuple = model.functions.items()[0]
 main_function = entrance_tuple[1]
 
@@ -77,7 +77,7 @@ print("--params.keys():\n",params.keys(),"\n")
 
 # 测试时间
 t2_start = time.time()
-# res = call_interpreter.evaluate()(*input_args, **params)
+res = call_interpreter.evaluate()(*input_args, **params)
 t2=time.time()-t2_start
 
 print("--output by model:\n    result:--\n",output,"\n    time",t1,"\n")

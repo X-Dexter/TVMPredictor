@@ -1,11 +1,7 @@
 # create the runtime-dataset for add-op
 
-from numpy import random
-from create_dataset.common import test_op_time,create_dataset
-import tvm
-# from tvm import target
+from create_dataset.common import test_op_time,create_dataset_nd
 import tvm.relay as relay
-import numpy as np
 
 shape = (100,100,100)
 
@@ -13,10 +9,10 @@ def calculate_time(dshape,dtype="float32"):
     '''
     test add-op in one kind of shape.
     '''
-    x = relay.var("input_x", shape=dshape, dtype=dtype)
-    y = relay.var("input_y", shape=dshape, dtype=dtype)
+    x = relay.var("input_x", shape=dshape[0], dtype=dtype)
+    y = relay.var("input_y", shape=dshape[1], dtype=dtype)
     f = relay.add(x, y)
 
-    return test_op_time(input_dict={"input_x": (dshape,dtype), "input_y":(dshape,dtype)},output=f,cycle_times=50)
+    return test_op_time(input_dict={"input_x": (dshape[0],dtype), "input_y":(dshape[1],dtype)},output=f,cycle_times=50)
 
-create_dataset(function=calculate_time,max_shapes=(100,100,100),sampling=(0.15,0.15,0.15),dtype="float32",file_name="test.txt")
+create_dataset_nd(function=calculate_time,shape_relation=[lambda x:x, lambda x:x],max_shapes=(100,100,100),sampling=(0.15,0.15,0.15),dtype="float32",file_name="test.txt")
