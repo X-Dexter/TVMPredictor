@@ -62,6 +62,8 @@ entrance_tuple = model.functions.items()[0]
 main_function = entrance_tuple[1]
 
 call_body = main_function.body.tuple_value if hasattr(main_function.body,"tuple_value") else main_function.body
+print("--call_body.args:",call_body.args)
+print("--call_body.attrs:",call_body.attrs)
 temp_body = tvm.relay.Call(call_body.op, call_body.args, attrs=call_body.attrs, type_args=call_body.type_args)
 # temp_body1 = tvm.relay.expr.TupleGetItem(temp_body,0)
 call_function = tvm.relay.Function(relay.analysis.free_vars(temp_body),temp_body)

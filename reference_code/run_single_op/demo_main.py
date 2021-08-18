@@ -101,5 +101,5 @@ input_args.append(data_tvm)
 print("--params.keys():\n",params.keys(),"\n")
 res = call_interpreter.evaluate()(*input_args, **params)
 
-print("--output:\n",output,"\n")
-print("--res:\n",res,"\n")
+# print("--output:\n",output,"\n")
+# print("--res:\n",res,"\n")
