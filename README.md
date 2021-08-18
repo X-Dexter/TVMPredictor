@@ -16,6 +16,9 @@ Doing 、to-do and done
 >       * 基于TVM对ONNX模型解析为计算图
 >       * 单独执行某个算子
 >       * 已经生成add算子的训练集(create_dataset/add_float.txt)
+>       * 生成matmul算子的训练集(create_dataset/mul_mat.txt)
+
+模型可训练的依据，可参考文档最后
 
 ## 一、背景及意义
 
@@ -120,6 +123,50 @@ Doing 、to-do and done
 
 ## 七、关键文件说明
 
-
 ## 八、参考资料
 > TVM手册：https://support.huaweicloud.com/odevg-A200_3000/odevg-A200_3000.pdf
+
+## 九、附加参考
+
+测试代码：
+```python
+import matplotlib.pyplot as plt
+
+f=open("add_float.txt","r")
+
+datas1=[]
+line = f.readline()
+while line is not None and len(line)>0 :
+    datas1.append(float(line.split(",")[1]))
+    line=f.readline()
+
+f.close()
+
+
+f=open("mul_mat.txt","r")
+
+datas2=[]
+line = f.readline()
+while line is not None and len(line)>0 :
+    datas2.append(float(line.split(",")[1]))
+    line=f.readline()
+
+f.close()
+
+
+plt.rcParams['font.sans-serif'] = ['FangSong']  # 指定默认字体
+plt.rcParams['axes.unicode_minus'] = False  # 解决保存图像时'-'显示为方块的问题
+ 
+plt.figure(1)
+add_img = plt.subplot(1, 2, 1)
+plt.plot(datas1)
+add_img.set_title("add-op")
+
+mul_img = plt.subplot(1, 2, 2)
+plt.plot(datas2)
+mul_img.set_title("mul-op")
+
+plt.show()
+```
+<img src="images_markdown/Figure_1.png" alt="框架结构图" style="zoom: 50%;" align="center" />
+<img src="images_markdown/Figure_2.png" alt="框架结构图" style="zoom: 50%;" align="center" />
