@@ -15,4 +15,4 @@ def calculate_time(dshape,dtype="float32"):
 
     return test_op_time(input_dict={"input_x": (dshape[0],dtype), "input_y":(dshape[1],dtype)},output=f,cycle_times=50)
 
-create_dataset_nd(function=calculate_time,shape_relation=[lambda x:x, lambda x:x],max_shapes=(100,100,100),sampling=(0.15,0.15,0.15),dtype="float32",file_name="test.txt")
+create_dataset_nd(function=calculate_time,shape_relation=[lambda x:x, lambda x:x],max_shapes=(100,100,100),sampling=(0.15,0.15,0.15),dtype="float32",file_name="add_float.txt")
