@@ -15,7 +15,7 @@ def calculate_time(dshape,dtype="float32"):
 
     x = relay.var("input_x", shape=dshape[0], dtype=dtype)
     y = relay.var("input_y", shape=dshape[1], dtype=dtype)
-    f = relay.nn.batch_matmul(x,y)
+    f = relay.nn.matmul(x,y)
 
     return test_op_time(input_dict={"input_x": (dshape[0],dtype), "input_y":(dshape[1],dtype)},output=f,cycle_times=25)
 
