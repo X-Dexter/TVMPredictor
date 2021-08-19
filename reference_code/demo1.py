@@ -38,6 +38,6 @@ print("以下是关键信息：")
 print("--op type:",call_body.op)
 print("--input args[0].shape:",call_body.args[0].checked_type.shape)
 print("--input args[1].shape:",call_body.args[1].checked_type.shape)
-print("--output shape:",call_body.args[1].checked_type.shape)
+print("--output shape:",call_body.checked_type.shape)
 
 print()

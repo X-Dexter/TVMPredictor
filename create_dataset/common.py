@@ -128,28 +128,22 @@ def create_dataset_nd(function,shape_relation, max_shapes, sampling, dtype="floa
         shape=redress_dimensionality(shape)
         if shape:
             shapes = []
-            for relation in shape_relation:
-                shapes.append(relation(shape))
+            write_str=""
+            for index,relation in enumerate(shape_relation):
+                new_shape=relation(shape)
+                shapes.append(new_shape)
+                write_str+=" ".join(str(m) for m in new_shape)
+
+                if index< len(shape_relation)-1:
+                    write_str+="|"
+
             run_time = function(shapes,dtype)
 
             # 打开一个文件
-            fo.write(" ".join(str(m) for m in shape)+","+str(run_time*1000000)+"\n")
+            fo.write(write_str+","+str(run_time*1000000)+"\n")
         
     # 关闭打开的文件
     fo.close()
-
-def create_dataset_1d(function,max_shapes, sampling, dtype="float32",file_name="dataset.txt",fold_path="create_dataset/datasets/"):
-    '''
-    The dataset is obtained through uniform sampling. usable range: y = op(X),  but the n inputs have fixed relationship
-
-    Parameters
-    ----------
-    * function: < function(shape,dtype)>, which can gives the run-time
-    * max_shapes: give the max size of each dimensionality
-    * sampling: sampling/100 gives the hit rate
-    '''
-
-    create_dataset_nd(function=function,shape_relation=[lambda x:x],max_shapes=max_shapes,sampling=sampling,dtype=dtype,file_name=file_name,fold_path=fold_path)
 
 def create_dataset_2d(function,max_shapes, sampling, dtype="float32",file_name="dataset.txt",fold_path="create_dataset/datasets/",limit = lambda x,y:True):
     '''
@@ -158,8 +152,8 @@ def create_dataset_2d(function,max_shapes, sampling, dtype="float32",file_name="
     Parameters
     ----------
     * function: < function(shape,dtype)>, which can gives the run-time
-    * max_shapes: give the max size of each dimensionality
-    * sampling: sampling/100 gives the hit rate
+    * max_shapes: give the max size of each dimensionality, tuple type
+    * sampling: sampling/100 gives the hit rate, tuple type
     * limit: when x,y is ok to be the inputs at the same time, limit(x,y) return True, or return False
     '''
 
@@ -215,6 +209,6 @@ def create_dataset_2d(function,max_shapes, sampling, dtype="float32",file_name="
 
                     # 打开一个文件
                     fo.write(" ".join(str(m) for m in shape_x)+"|"+ " ".join(str(m) for m in shape_y) +","+str(run_time*1000000)+"\n")
-            
+
     # 关闭打开的文件
     fo.close()

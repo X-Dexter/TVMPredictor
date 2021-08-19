@@ -41,4 +41,4 @@ def relation(x,y):
     
     return True
 
-create_dataset_2d(function=calculate_time,max_shapes=((100,100,100),(100,100,100)),sampling=((0.1,0.1,0.1),(0.1,0.1,0.1)),dtype="float32",file_name="mul_mat.txt",limit=relation)
+create_dataset_2d(function=calculate_time,max_shapes=((100,100,100),(100,100,100)),sampling=((0.1,0.1,0.1),(0.1,0.1,0.1)),dtype="float32",file_name="mul_mat_float.txt",limit=relation)
