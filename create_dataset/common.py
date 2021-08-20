@@ -94,10 +94,14 @@ def create_dataset_nd(function,shape_relation, max_shapes, sampling, dtype="floa
 
     Parameters
     ----------
-    * function: < function(shape,dtype)>, which can gives the run-time
+    * function: < {"body": <function(shape,dtype,target,device)>, "params":{"target": target, "device": device}} >, which can gives the run-time
     * max_shapes: give the max size of each dimensionality
     * shape_relation: give the shape relation between inputs. ep: y = op(x0, x1, ... , xn), then xn= shape_relation[n](x)
     * sampling: sampling/100 gives the hit rate
+
+    exp:
+    * GPU: target = "cuda", device = tvm.cuda(0)
+    * CPU: target = "llvm", device=tvm.cpu(0)
     '''
 
     shapes_in_dimensionality=[]
@@ -151,10 +155,14 @@ def create_dataset_2d(function,max_shapes, sampling, dtype="float32",file_name="
 
     Parameters
     ----------
-    * function: < function(shape,dtype)>, which can gives the run-time
+    * function: < {"body": <function(shape,dtype,target,device)>, "params":{"target": target, "device": device}} >, which can gives the run-time
     * max_shapes: give the max size of each dimensionality, tuple type
     * sampling: sampling/100 gives the hit rate, tuple type
     * limit: when x,y is ok to be the inputs at the same time, limit(x,y) return True, or return False
+
+    exp:
+    * GPU: target = "cuda", device = tvm.cuda(0)
+    * CPU: target = "llvm", device=tvm.cpu(0)
     '''
 
     # 针对各输入维度生成采样空间
