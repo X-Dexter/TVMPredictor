@@ -137,7 +137,7 @@ def create_dataset_nd(function,shape_relation, max_shapes, sampling, dtype="floa
                 if index< len(shape_relation)-1:
                     write_str+="|"
 
-            run_time = function(shapes,dtype)
+            run_time = function["body"](shapes,dtype,target=function["params"]["target"], device=function["params"]["device"])
 
             # 打开一个文件
             fo.write(write_str+","+str(run_time*1000000)+"\n")
@@ -205,7 +205,7 @@ def create_dataset_2d(function,max_shapes, sampling, dtype="float32",file_name="
             shape_y=redress_dimensionality(shape_y)     # 第二个input的shape
             if shape_y:
                 if limit(shape_x,shape_y):
-                    run_time = function([shape_x,shape_y],dtype)
+                    run_time = function["body"]([shape_x,shape_y],dtype,target=function["params"]["target"], device=function["params"]["device"])
 
                     # 打开一个文件
                     fo.write(" ".join(str(m) for m in shape_x)+"|"+ " ".join(str(m) for m in shape_y) +","+str(run_time*1000000)+"\n")
