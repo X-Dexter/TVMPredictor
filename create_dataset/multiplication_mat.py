@@ -52,4 +52,5 @@ def relation(x,y):
     
     return True
 
-create_dataset_2d(function={"body":calculate_time,"params":{"target": "llvm", "device": tvm.cpu(0)}},max_shapes=((100,100,100),(100,100,100)),sampling=((0.1,0.1,0.1),(0.1,0.1,0.1)),dtype="float32",file_name="mul_mat_float.txt",limit=relation)
+create_dataset_2d(function={"body":calculate_time,"params":{"target": "llvm", "device": tvm.cpu(0)}},max_shapes=((100,100,100),(100,100,100)),sampling=((0.1,0.1,0.1),(0.1,0.1,0.1)),dtype="float32",file_name="mul_mat_float.txt",limit=relation,fold_path="create_dataset/datasets/dell04/")
+create_dataset_2d(function={"body":calculate_time,"params":{"target": "cuda", "device": tvm.cuda(0)}},max_shapes=((100,100,100),(100,100,100)),sampling=((0.1,0.1,0.1),(0.1,0.1,0.1)),dtype="float32",file_name="mul_mat_float_gpu.txt",limit=relation,fold_path="create_dataset/datasets/dell04/")

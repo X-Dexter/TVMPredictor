@@ -1,0 +1,1 @@
+=(0.15,0.15,0.15),dtype="float32",file_name="copy_add_float_gpu.txt",fold_path="create_dataset/datasets/dell04/")
