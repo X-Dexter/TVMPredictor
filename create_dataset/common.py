@@ -7,7 +7,7 @@ from tvm.contrib import graph_runtime
 from tvm.contrib import graph_executor
 from tqdm import tqdm
 
-def test_op_time(input_dict,output, target="llvm", device=tvm.cpu(0),cycle_times=200, min_value=-100,max_value=100):
+def test_op_time(input_dict,output, target="llvm", device=tvm.cpu(0),cycle_times=200, min_value=-100,max_value=100, use_tvm_test_function=False,min_repeat_ms=500):
     '''
     Get the run-time(s) of single op. 
 
@@ -29,38 +29,43 @@ def test_op_time(input_dict,output, target="llvm", device=tvm.cpu(0),cycle_times
     func = relay.Function(relay.analysis.free_vars(output), output)
     model = relay.transform.InferType()(tvm.ir.IRModule.from_expr(func))
 
-    with relay.build_config(opt_level=3):
-        graph, lib, params = relay.build(model, target=target, params={})
+    # with relay.build_config(opt_level=3):  # relay.build_config在TVM未来版本将被弃用，用PassContext取代
+    with tvm.transform.PassContext(opt_level=1):   
+        lib = relay.build(model, target=target, params={})
 
     # 给模型赋初始值
     # module = graph_runtime.create(graph, lib, device)
-    module = graph_executor.create(graph, lib, device)
+    module = graph_executor.GraphModule(lib["default"](device))     # 参考：https://tvm.apache.org/docs/tutorials/frontend/from_tensorflow.html
 
-    # 一次性随机生成所有输入矩阵
-    input_values={}
-    for key,size in input_dict.items():
-        input_values[key] = np.random.uniform(min_value, max_value, size=(cycle_times+1,*(size[0]))).astype(size[1])
+    if use_tvm_test_function:
+        ftimer = module.module.time_evaluator("run", device, repeat=cycle_times, min_repeat_ms=min_repeat_ms, number=1)
+        return np.mean(np.array(ftimer().results))
+    else:
+        # 一次性随机生成所有输入矩阵
+        input_values={}
+        for key,size in input_dict.items():
+            input_values[key] = np.random.uniform(min_value, max_value, size=(cycle_times+1,*(size[0]))).astype(size[1])
 
-    total_time=0.0
-    for i in range(cycle_times+1):
-        for key,values in input_values.items():
-            module.set_input(key, values[i])
+        total_time=0.0
+        for i in range(cycle_times+1):
+            for key,values in input_values.items():
+                module.set_input(key, values[i])
 
-        # 测试时间,初次测量存在模型加载时间，手动去除
-        start = time.time()
-        module.run()
-        single_t =time.time()-start
+            # 测试时间,初次测量存在模型加载时间，手动去除
+            start = time.time()
+            module.run()
+            single_t =time.time()-start
 
-        # 打印时间差
-        if i==0:
-            print("-i=0:",single_t)
-        if i==1:
-            print(" i=1", single_t)
-        
-        if i>0:
-            total_time+=single_t
+            # # 打印时间差
+            # if i==0:
+            #     print("-i=0:",single_t)
+            # if i==1:
+            #     print(" i=1", single_t)
+            
+            if i>0:
+                total_time+=single_t
 
-    return total_time/cycle_times
+        return total_time/cycle_times
 
 def uniform_sampling(array,sampling=0.1):
     '''
