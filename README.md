@@ -29,7 +29,6 @@ Doing 、to-do and done
 
 ## 三、理论支撑
 1. 已知深度学习框架生成的模型，可以结合ONNX/Core ML等标准模型，最终通过TVM解析为计算图。
-
 <img src="images_markdown/image-20210811192125367.png" alt="框架结构图" style="zoom: 50%;" align="center" />
 <p align="center">图片来源于网络</p>
 
@@ -38,6 +37,9 @@ Doing 、to-do and done
 > NNVM: 用于生成计算图。它将不同框架的工作负载表示为标准化计算图，然后将这些高级图转化为执行图
 > 
 > TVM:  用于映射张量运算。它提供一种独立于硬件的特定域语言（DSL），以简化张量索引层次中的运算符实现。
+
+TVM优化流程：
+<img src="images_markdown/Figure_3.png" alt="TVM优化流程" style="zoom: 100%;" align="center" />
 
 > 详细可参阅：https://sanallen.gitbooks.io/workdoc/content/shen-du-xue-xi-bian-yi-zhong-jian-jian/shen-du-xue-xi-bian-yi-zhong-jian-jian-zhi-nnvm-4e0029-jie-shao.html
 
