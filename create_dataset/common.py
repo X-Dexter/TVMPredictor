@@ -30,7 +30,7 @@ def test_op_time(input_dict,output, target="llvm", device=tvm.cpu(0),cycle_times
     model = relay.transform.InferType()(tvm.ir.IRModule.from_expr(func))
 
     # with relay.build_config(opt_level=3):  # relay.build_config在TVM未来版本将被弃用，用PassContext取代
-    with tvm.transform.PassContext(opt_level=1):   
+    with tvm.transform.PassContext(opt_level=0):   
         lib = relay.build(model, target=target, params={})
 
     # 给模型赋初始值
@@ -256,7 +256,7 @@ def test_data_copy_time(input_dict,output, target="llvm", device=tvm.cpu(0),cycl
     func = relay.Function(relay.analysis.free_vars(output), output)
     model = relay.transform.InferType()(tvm.ir.IRModule.from_expr(func))
 
-    with relay.build_config(opt_level=3):
+    with relay.build_config(opt_level=0):
         graph, lib, params = relay.build(model, target=target, params={})
 
     # 给模型赋初始值
