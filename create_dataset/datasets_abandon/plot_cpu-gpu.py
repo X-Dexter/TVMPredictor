@@ -34,7 +34,6 @@ line = f.readline()
 while line is not None and len(line)>0 :
     mul_mat_datas_cpu.append(float(line.split(",")[1]))
     line=f.readline()
-
 f.close()
 
 
@@ -50,7 +49,7 @@ f.close()
 
 # 开始画图
 plt.rcParams['font.sans-serif'] = ['FangSong']  # 指定默认字体
-plt.rcParams['axes.unicode_minus'] = False  # 解决保存图像时'-'显示为方块的问题
+plt.rcParams['axes.unicode_minus'] = False      # 解决保存图像时'-'显示为方块的问题
 
 plt.figure(1)
 

@@ -1,12 +1,7 @@
-# create the runtime-dataset for add-op
-
-from create_dataset.common import test_op_time,create_dataset_nd,test_data_copy_time
+from create_dataset.common import generate_datasets_with_one_dimensionality_changing,Device
 import tvm.relay as relay
-import tvm
 
-shape = (100,100,100)
-
-def calculate_op_time(dshape,dtype="float32",target="llvm", device=tvm.cpu(0)):
+def calculate_op(dshape,dtype="float32"):
     '''
     test add-op in one kind of shape.
 
@@ -21,33 +16,40 @@ def calculate_op_time(dshape,dtype="float32",target="llvm", device=tvm.cpu(0)):
     y = relay.var("input_y", shape=dshape[1], dtype=dtype)
     f = relay.add(x, y)
 
-    return test_op_time(input_dict={"input_x": (dshape[0],dtype), "input_y":(dshape[1],dtype)},output=f,cycle_times=50,target=target, device=device,use_tvm_test_function=True,min_repeat_ms=10)
+    return f
 
-    # return test_op_time(input_dict={"input_x": (dshape[0],dtype), "input_y":(dshape[1],dtype)},output=f,cycle_times=50,target=target, device=device,use_tvm_test_function=False)
+# 定义参数
+function_dict = {"func":calculate_op, "name": "add"}
+min_shapes=1
+max_shapes=100
+sampling=1.0
+dtype="float32"
 
-def calculate_copy_time(dshape,dtype="float32",target="llvm", device=tvm.cpu(0)):
-    '''
-    test add-op in one kind of shape.
+cycle_times=20
+min_repeat_ms=30
+opt_level=0
+fold_path="create_dataset/datasets/"
+device_name="dell04"
+show_print=True
+# log_file默认值.
 
-    Parameters
-    ----------
+# 研究二维加法
+count2 = 7
 
-    exp:
-    * GPU: target = "cuda", device = tvm.cuda(0)
-    * CPU: target = "llvm", device=tvm.cpu(0)
-    '''
-    x = relay.var("input_x", shape=dshape[0], dtype=dtype)
-    y = relay.var("input_y", shape=dshape[1], dtype=dtype)
-    f = relay.add(x, y)
+force_shape_relation2=(None,(lambda x,y:x, lambda x,y:y))
+shapes_dimensionality2=((2,2),(0,0))
+range_min2 = ((-1,1),(1,1))
+range_max2 = ((-1,100),(100,100))
+device_parame_array2 = [Device.device_params_CPU,Device.device_params_GPU0]
 
-    return test_data_copy_time(input_dict={"input_x": (dshape[0],dtype), "input_y":(dshape[1],dtype)},output=f,cycle_times=50,target=target, device=device)
+generate_datasets_with_one_dimensionality_changing(device_parame_array=device_parame_array2,count=count2,shape_dimensionality=shapes_dimensionality2,range_min=range_min2,range_max=range_max2,function_dict = function_dict,min_shapes=min_shapes,max_shapes=max_shapes,sampling=sampling,force_shape_relation=force_shape_relation2,dtype=dtype,cycle_times=cycle_times,min_repeat_ms=min_repeat_ms,opt_level=opt_level,fold_path=fold_path,device_name=device_name,show_print=show_print)
 
-create_dataset_nd(function={"body":calculate_op_time,"params":{"target": "llvm", "device": tvm.cpu(0)}},shape_relation=[lambda x:x, lambda x:x],max_shapes=(100,100,100),sampling=(0.03,0.03,0.03),dtype="float32",file_name="add_float_test_tmp.txt",fold_path="create_dataset/datasets/dell04/")
-# create_dataset_nd(function={"body":calculate_op_time,"params":{"target": "cuda", "device": tvm.cuda(0)}},shape_relation=[lambda x:x, lambda x:x],max_shapes=(100,100,100),sampling=(0.15,0.15,0.15),dtype="float32",file_name="add_float_gpu.txt",fold_path="create_dataset/datasets/dell04/")
+# 研究三维加法
+count3 = 7
+force_shape_relation3=(None,(lambda x,y,z:x, lambda x,y,z:y, lambda x,y,z:z))
+shapes_dimensionality3=((3,3),(0,0))
+range_min3 = ((-1,1,1),(1,1,1))
+range_max3 = ((-1,100,100),(100,100,100))
+device_parame_array3 = [Device.device_params_CPU,Device.device_params_GPU0]
 
-
-# create_dataset_nd(function={"body":calculate_op_time,"params":{"target": "llvm", "device": tvm.cpu(0)}},shape_relation=[lambda x:x, lambda x:x],max_shapes=(100,100,100),sampling=(0.15,0.15,0.15),dtype="float32",file_name="add_float.txt",fold_path="create_dataset/datasets/dell04/")
-# create_dataset_nd(function={"body":calculate_op_time,"params":{"target": "cuda", "device": tvm.cuda(0)}},shape_relation=[lambda x:x, lambda x:x],max_shapes=(100,100,100),sampling=(0.15,0.15,0.15),dtype="float32",file_name="add_float_gpu.txt",fold_path="create_dataset/datasets/dell04/")
-
-# create_dataset_nd(function={"body":calculate_copy_time,"params":{"target": "llvm", "device": tvm.cpu(0)}},shape_relation=[lambda x:x, lambda x:x],max_shapes=(100,100,100),sampling=(0.15,0.15,0.15),dtype="float32",file_name="copy_add_float.txt",fold_path="create_dataset/datasets/dell04/")
-# create_dataset_nd(function={"body":calculate_copy_time,"params":{"target": "cuda", "device": tvm.cuda(0)}},shape_relation=[lambda x:x, lambda x:x],max_shapes=(100,100,100),sampling=(0.15,0.15,0.15),dtype="float32",file_name="copy_add_float_gpu.txt",fold_path="create_dataset/datasets/dell04/")
+generate_datasets_with_one_dimensionality_changing(device_parame_array=device_parame_array3,count=count3,shape_dimensionality=shapes_dimensionality3,range_min=range_min3,range_max=range_max3,function_dict = function_dict,min_shapes=min_shapes,max_shapes=max_shapes,sampling=sampling,force_shape_relation=force_shape_relation3,dtype=dtype,cycle_times=cycle_times,min_repeat_ms=min_repeat_ms,opt_level=opt_level,fold_path=fold_path,device_name=device_name,show_print=show_print)

@@ -1,88 +1,197 @@
 import time
+import hashlib
+import json
+import os
 import tvm
+import random
+import copy
 # from tvm import target
 import tvm.relay as relay
 import numpy as np
 from tvm.contrib import graph_runtime
 from tvm.contrib import graph_executor
 from tqdm import tqdm
+from tvm.runtime.module import Module
 
-def test_op_time(input_dict,output, target="llvm", device=tvm.cpu(0),cycle_times=200, min_value=-100,max_value=100, use_tvm_test_function=False,min_repeat_ms=500):
+class Device:
+    device_params_CPU = {"target": "llvm", "device": tvm.cpu(0),"type":-1}
+    device_params_GPU0 = {"target": "cuda", "device": tvm.cuda(0),"type":0}
+    device_params_GPU1 = {"target": "cuda", "device": tvm.cuda(1),"type":1}
+
+def generate_datasets_with_one_dimensionality_changing(count,shape_dimensionality,range_min,range_max,function_dict,min_shapes,max_shapes,sampling,force_shape_relation=None,dtype="float32",device_parame_array=[{"target": "llvm", "device": tvm.cpu(0),"type":-1}],cycle_times=200,min_repeat_ms=500,opt_level=0,fold_path="create_dataset/datasets/",device_name="dell04",dataset_config_name="dataset.json",show_print=True) ->None:
     '''
-    Get the run-time(s) of single op. 
+    * shape_dimensionality: gives the shape info and changing dimensionality
+    * count: the datasets count will create.
+    * shapes[i][j] have range from range_min[i][j] to range_max[i][j].
+    '''
+    log_file=os.path.join(fold_path,dataset_config_name)
+    log_dict = {"count":0}
+    if os.path.exists(log_file):
+        with open(log_file,'r') as f:
+            log_dict = json.load(f)
+    
+    counts=[]
+    for device_params in device_parame_array:
+        if device_name.lower() not in log_dict or function_dict["name"].lower() not in log_dict[device_name.lower()] or str(device_params["type"]) not in log_dict[device_name.lower()][function_dict["name"].lower()] or str(shape_dimensionality) not in log_dict[device_name.lower()][function_dict["name"].lower()][str(device_params["type"])]:
+            counts.append(count)
+        else:
+            counts.append(count -log_dict[device_name.lower()][function_dict["name"].lower()][str(device_params["type"])][str(shape_dimensionality)]["count"])
+
+    if count<=0:
+        return
+
+    for i in range(count):
+        shapes = create_random_shape(shape_dimensionality,range_min,range_max)
+        for device_params,left_count in zip(device_parame_array,counts):
+            if i<left_count:
+                generate_dataset_with_one_dimensionality_changing(function_dict = function_dict,shapes=shapes,min_shapes=min_shapes,max_shapes=max_shapes,sampling=sampling,force_shape_relation=force_shape_relation,dtype=dtype,device_parames=device_params,cycle_times=cycle_times,min_repeat_ms=min_repeat_ms,opt_level=opt_level,fold_path=fold_path,device_name=device_name,dataset_config_name=dataset_config_name,show_print=show_print)
+
+
+def generate_dataset_with_one_dimensionality_changing(function_dict,shapes,min_shapes,max_shapes,sampling,force_shape_relation=None,dtype="float32",device_parames={"target": "llvm", "device": tvm.cpu(0),"type":-1},cycle_times=200,min_repeat_ms=500,opt_level=0,fold_path="create_dataset/datasets/",device_name="dell04",dataset_config_name="dataset.json",show_print=True) ->None:
+    '''
+    save the op-time(ms) to disk-file when only a single dimensionality of one input-shape changing.
 
     Parameters
     ----------
-    * input_dict:   give the real inputs. exp: { var_name_str: (shape,type)}
-    * output:   give the real output that is compute by inputs
-    * min_value ~ max_value:    when create the random input values, this gives the range.
-
-    Returns
-    ---------
-    the avg run time(second) with one kind of shape.
+    * function_dict: {"func": (tvm.relay.Function), "name": op-name}, func is a tensor which can describe an op-process.
+    * shapes: (python tuple) which describe the tensor-shape of inputs, exp: ((x0,-1,x2), (y0,y1,y2)); -2 means no exist.
+    * min_shapes ~ max_shapes: give the range of the changing dimensionality
+    * sampling: sampling/100 gives the hit rate
+    * opt_level:   The optimization level of this pass.[0-3?]. opt_level= 0 means disable optimization.
+    * device_parames: type=-1: CPU, type=n: GPU(n)
 
     exp:
     * GPU: target = "cuda", device = tvm.cuda(0)
     * CPU: target = "llvm", device=tvm.cpu(0)
+
+    # ast.literal_eval("(255, 0, 0)") can get tuple(255,0,0)
+
+    Returns
+    ---------
+    no return value.
     '''
+    # 生成不冲突的数据集路径
+    x,y = search_changing_shape(shapes)
+    shape_dimensionality_str = str((get_dimensionality(shapes),(x,y)))
 
-    func = relay.Function(relay.analysis.free_vars(output), output)
-    model = relay.transform.InferType()(tvm.ir.IRModule.from_expr(func))
+    data_savepath = os.path.join(ensure_dir_exist(os.path.join(fold_path,device_name,function_dict["name"],str(device_parames["type"]),str(shape_dimensionality_str))),str(shapes)+".txt")
 
-    # with relay.build_config(opt_level=3):  # relay.build_config在TVM未来版本将被弃用，用PassContext取代
-    with tvm.transform.PassContext(opt_level=0):   
-        lib = relay.build(model, target=target, params={})
+    if os.path.exists(data_savepath) and show_print:
+        print("exists and skip: %s"%(data_savepath))
+        return
 
-    # 给模型赋初始值
-    # module = graph_runtime.create(graph, lib, device)
-    module = graph_executor.GraphModule(lib["default"](device))     # 参考：https://tvm.apache.org/docs/tutorials/frontend/from_tensorflow.html
+    dshape = uniform_sampling(min_shapes,max_shapes,sampling)
+    f_dataset = open(data_savepath, "a")
 
-    if use_tvm_test_function:
-        ftimer = module.module.time_evaluator("run", device, repeat=cycle_times, min_repeat_ms=min_repeat_ms, number=1)
-        return np.mean(np.array(ftimer().results))
-    else:
-        # 一次性随机生成所有输入矩阵
-        input_values={}
-        for key,size in input_dict.items():
-            input_values[key] = np.random.uniform(min_value, max_value, size=(cycle_times+1,*(size[0]))).astype(size[1])
+    # 写入执行时间
+    for i in range(len(dshape)):
+        runtime = test_op_time(function_dict["func"](generate_shape(shapes,x,y,dshape[i],force_shape_relation=force_shape_relation),dtype=dtype),device_parames=device_parames,cycle_times=cycle_times,min_repeat_ms=min_repeat_ms,opt_level=opt_level)
+        f_dataset.write(str(dshape[i])+","+str(runtime*1000)+"\n")
+    f_dataset.close()
 
-        total_time=0.0
-        for i in range(cycle_times+1):
-            for key,values in input_values.items():
-                module.set_input(key, values[i])
+    if show_print:
+        print("create:\n--op: %s\n--device: %s\n--shape: %s\n--file: %s\n\n"%(function_dict["name"].lower(),translate_device_type(device_parames["type"]),str(shapes),data_savepath))
 
-            # 测试时间,初次测量存在模型加载时间，手动去除
-            start = time.time()
-            module.run()
-            single_t =time.time()-start
+    # 构建数据集存档信息
+    log_file=os.path.join(fold_path,dataset_config_name)
 
-            # # 打印时间差
-            # if i==0:
-            #     print("-i=0:",single_t)
-            # if i==1:
-            #     print(" i=1", single_t)
-            
-            if i>0:
-                total_time+=single_t
+    log_dict = {"count":0}
+    if os.path.exists(log_file):
+        with open(log_file,'r') as f:
+            log_dict = json.load(f)
 
-        return total_time/cycle_times
+    # 检查字典树路径存在
+    # 确保 设备名-->keys
+    if device_name.lower() not in log_dict.keys():
+        log_dict[device_name.lower()] = {}
+        log_dict[device_name.lower()]["count"] = 0 
 
-def uniform_sampling(array,sampling=0.1):
+    # 确保 算子名-->keys
+    if function_dict["name"].lower() not in log_dict[device_name.lower()].keys():
+        log_dict[device_name.lower()][function_dict["name"].lower()] = {}
+        log_dict[device_name.lower()][function_dict["name"].lower()]["count"] = 0 
+
+    # 确保 硬件类型-->keys
+    if str(device_parames["type"]) not in log_dict[device_name.lower()][function_dict["name"].lower()].keys():
+        log_dict[device_name.lower()][function_dict["name"].lower()][str(device_parames["type"])] = {}
+        log_dict[device_name.lower()][function_dict["name"].lower()][str(device_parames["type"])]["count"] = 0 
+    
+    # 确保 输入shape_dimensionality-->keys
+    if shape_dimensionality_str not in log_dict[device_name.lower()][function_dict["name"].lower()][str(device_parames["type"])].keys():
+        log_dict[device_name.lower()][function_dict["name"].lower()][str(device_parames["type"])][shape_dimensionality_str] = {}
+        log_dict[device_name.lower()][function_dict["name"].lower()][str(device_parames["type"])][shape_dimensionality_str]["count"] = 0
+
+    # 确保 输入shapes-->keys
+    if str(shapes) not in log_dict[device_name.lower()][function_dict["name"].lower()][str(device_parames["type"])][shape_dimensionality_str].keys():
+        log_dict[device_name.lower()][function_dict["name"].lower()][str(device_parames["type"])][shape_dimensionality_str][str(shapes)] = {}
+        
+    # 记录数据集文件名，shape形状，开始训练时间  
+    log_dict[device_name.lower()][function_dict["name"].lower()][str(device_parames["type"])][shape_dimensionality_str][str(shapes)]["file_path"]=data_savepath
+    log_dict[device_name.lower()][function_dict["name"].lower()][str(device_parames["type"])][shape_dimensionality_str][str(shapes)]["changed_shape"]=shape_dimensionality_str
+    log_dict[device_name.lower()][function_dict["name"].lower()][str(device_parames["type"])][shape_dimensionality_str][str(shapes)]["shapes"]=str(shapes)
+    log_dict[device_name.lower()][function_dict["name"].lower()][str(device_parames["type"])][shape_dimensionality_str][str(shapes)]["time"]= time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
+    # 数量递增
+    log_dict["count"] += 1
+    log_dict[device_name.lower()]["count"] += 1
+    log_dict[device_name.lower()][function_dict["name"].lower()]["count"] +=1
+    log_dict[device_name.lower()][function_dict["name"].lower()][str(device_parames["type"])]["count"] +=1
+    log_dict[device_name.lower()][function_dict["name"].lower()][str(device_parames["type"])][shape_dimensionality_str]["count"] += 1
+    
+    with open(log_file,"w") as f:
+        json.dump(log_dict,fp=f,indent=4,separators=(',', ': '),sort_keys=True)
+    
+def uniform_sampling(min,max,sampling=0.1) ->list :
     '''
-    uniform sampling on a list/tuple, sampling gives the hit rate.
+    uniform sampling on a list, sampling gives the hit rate.
     '''
 
     result = []
-    if array is None or len(array) == 0 or sampling<=0.0 or sampling>1.0:
+    if min<1 or min>max or sampling<=0.0 or sampling>1.0:
         return result
 
     interval = int(1.0/sampling) 
-    i=0
-    while i<len(array):
-        result.append(array[i])
+    i=min
+    while i<=max:
+        result.append(i)
         i+=interval
 
     return result
+
+def get_dimensionality(shape) ->tuple:
+    a=[]
+    for i in range(len(shape)):
+        a.append(len(shape[i]))
+    return tuple(a)
+
+def test_op_time(func, device_parames,cycle_times,min_repeat_ms,opt_level=0) -> float :
+    '''
+    Get the run-time(us) of single op with a certain shape on certain device.
+
+    Parameters
+    ----------
+    * func_dict:   give the real inputs. exp: { "input_shapes": (shape1,shape2...), "function": function }, function is the output of the module function.
+    * opt_level:   The optimization level of this pass.[0-3?]. opt_level= 0 means disable optimization.
+    * device_parames: 
+
+    exp:
+    * GPU: target = "cuda", device = tvm.cuda(0)
+    * CPU: target = "llvm", device=tvm.cpu(0)
+
+    Returns
+    ---------
+    the avg run time(second) with one kind of shape.
+    '''
+
+    model = relay.transform.InferType()(tvm.ir.IRModule.from_expr(relay.Function(relay.analysis.free_vars(func), func)))
+
+    with tvm.transform.PassContext(opt_level=opt_level):   
+        lib = relay.build(model, target=device_parames["target"], params={})
+
+    # 给模型赋初始值
+    module = graph_executor.GraphModule(lib["default"](device_parames["device"]))
+
+    ftimer = module.module.time_evaluator("run", device_parames["device"], repeat=cycle_times, min_repeat_ms=min_repeat_ms, number=1)
+    return np.mean(np.array(ftimer().results))
 
 def redress_dimensionality(dimensions):
     '''
@@ -101,188 +210,152 @@ def redress_dimensionality(dimensions):
     else:
         return tuple(result)
 
-def create_dataset_nd(function,shape_relation, max_shapes, sampling, dtype="float32",file_name="dataset.txt",fold_path="create_dataset/datasets/"):
+def ensure_dir_exist(dir_path) ->str:
     '''
-    The dataset is obtained through uniform sampling. usable range: n->1,  but the n inputs have fixed relationship
+    create the dir-tree if not exists.
+    '''
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
+    return dir_path
+
+def search_changing_shape(shapes) ->tuple:
+    '''
+    search the changing dimensionality index.
+    '''
+    for i in range(len(shapes)):
+        for j in range(len(shapes[i])):
+            if shapes[i][j]==-1:
+                return i,j
+
+def generate_shape(shapes,x,y,value,force_shape_relation=None) ->tuple:
+    '''
+    replace the shapes[x][y] with the given value, and it won't change original shapes.
 
     Parameters
     ----------
-    * function: < {"body": <function(shape,dtype,target,device)>, "params":{"target": target, "device": device}} >, which can gives the run-time
-    * max_shapes: give the max size of each dimensionality
-    * shape_relation: give the shape relation between inputs. ep: y = op(x0, x1, ... , xn), then xn= shape_relation[n](x)
-    * sampling: sampling/100 gives the hit rate
+    * x,y: shapes[x][y] is the changing value in shapes
+    * force_shape_relation: when the other shapes have an relation with the changing shape, we can use this. if one dimensionality with on relation, you can give that dimensionality with None.
 
-    exp:
-    * GPU: target = "cuda", device = tvm.cuda(0)
-    * CPU: target = "llvm", device=tvm.cpu(0)
+    * exp:
+
+    if the shapes relation we want to have is ((a,b,c),(b,a,d)), and the first dimensionality's a is changing
+
+    force_shape_relation = (None, (lambda x,y,z:y, lambda x,y,z:x, None))
+
     '''
+    # tuple转化为list
+    tmp = []
+    for i in range(len(shapes)):
+        tmp.append(list(shapes[i]))
+    tmp[x][y]=value
 
-    shapes_in_dimensionality=[]
-    for i in range(len(max_shapes)):
-        shapes_in_dimensionality.append(uniform_sampling(range(max_shapes[i]), sampling[i]))
-
-    # 为避免循环多层嵌套，以自适应高层维度，将嵌套循环展开
-    total_case=1
-    len_shape_in_dimensionality=[]
-    for shape_in_dimensionality in shapes_in_dimensionality:
-        length = len(shape_in_dimensionality)
-        len_shape_in_dimensionality.append(length)
-        total_case *= length
-
-    # 打开文件
-    fo = open(fold_path+file_name, "a")
-    print("--total: ",total_case)
-    for i in tqdm(range(total_case)):
-        shape=[]
-        temp=i
-        # 计算shape
-        for j in range(len(shapes_in_dimensionality)):
-            len_shape=len_shape_in_dimensionality[j]
-            
-            shape.append(shapes_in_dimensionality[j][int(temp%len_shape)])
-            temp = int(temp/len_shape)
-
-        shape=redress_dimensionality(shape)
-        if shape:
-            shapes = []
-            write_str=""
-            for index,relation in enumerate(shape_relation):
-                new_shape=relation(shape)
-                shapes.append(new_shape)
-                write_str+=" ".join(str(m) for m in new_shape)
-
-                if index< len(shape_relation)-1:
-                    write_str+="|"
-
-            run_time = function["body"](shapes,dtype,target=function["params"]["target"], device=function["params"]["device"])
-
-            # 打开一个文件
-            fo.write(write_str+","+str(run_time*1000000)+"\n")
-        
-    # 关闭打开的文件
-    fo.close()
-
-def create_dataset_2d(function,max_shapes, sampling, dtype="float32",file_name="dataset.txt",fold_path="create_dataset/datasets/",limit = lambda x,y:True):
-    '''
-    The dataset is obtained through uniform sampling. usable range: z=op(x,y),  but there is nearly no relationship between x and y. You can set the limitation with limit(x,y) -> True/False
-
-    Parameters
-    ----------
-    * function: < {"body": <function(shape,dtype,target,device)>, "params":{"target": target, "device": device}} >, which can gives the run-time
-    * max_shapes: give the max size of each dimensionality, tuple type
-    * sampling: sampling/100 gives the hit rate, tuple type
-    * limit: when x,y is ok to be the inputs at the same time, limit(x,y) return True, or return False
-
-    exp:
-    * GPU: target = "cuda", device = tvm.cuda(0)
-    * CPU: target = "llvm", device=tvm.cpu(0)
-    '''
-
-    # 针对各输入维度生成采样空间
-    shapes_in_dimensionality=[[],[]]
-    for j in range(len(shapes_in_dimensionality)):
-        for i in range(len(max_shapes[j])):
-            shapes_in_dimensionality[j].append(uniform_sampling(range(max_shapes[j][i]), sampling[j][i]))
-
-    # 为避免循环多层嵌套，以自适应多维输入，将 嵌套循环 展开成一维循环
-    total_case=[1,1]
-    len_shape_in_dimensionality=[[],[]]
-    for i in range(len(shapes_in_dimensionality)):
-        for shape_in_dimensionality in shapes_in_dimensionality[i]:
-            length = len(shape_in_dimensionality)
-            len_shape_in_dimensionality[i].append(length)
-            total_case[i] *= length
-
-    # 打开文件
-    fo = open(fold_path+file_name, "a")
-    print("model path: ", fold_path+file_name)
-
-    print("--total: ",total_case)
+    if force_shape_relation:
+        for i in range(len(shapes)):
+            if i != x :
+                # 调整第i个shape
+                if not force_shape_relation[i]:
+                    # 保持不变
+                    continue
+                for j in range(len(shapes[i])):
+                    if not force_shape_relation[i][j]:
+                        # tmp[i][j]保持不变
+                        continue
+                    tmp[i][j]=force_shape_relation[i][j](*tmp[x])
     
-    for i_x in tqdm(range(total_case[0])):
-        shape_x = []
-        temp_x = i_x
-        # 生成shape x
-        for j_x in range(len(shapes_in_dimensionality[0])):
-            len_shape_x=len_shape_in_dimensionality[0][j_x]
-            
-            shape_x.append(shapes_in_dimensionality[0][j_x][int(temp_x % len_shape_x)])
-            temp_x = int(temp_x/len_shape_x)
+    # list转化为tuple
+    result=[]
+    for i in range(len(tmp)):
+        result.append(tuple(tmp[i]))
+                               
+    return tuple(result)
 
-        shape_x=redress_dimensionality(shape_x)     # 第一个input的shape
-        if not shape_x:   # shape不合理
+def create_random_shape(shape_dimensionality,min,max):
+    '''
+    * shapes[i][j] have range from min[i][j] to max[i][j].
+    '''
+    # tuple转化为list
+    x = shape_dimensionality[1][0]
+    y = shape_dimensionality[1][1]
+
+    # 生成shapes list，变化的维度为-1
+    shapes = []
+    for i in range(len(shape_dimensionality[0])):
+        tmp = []
+        for j in range(shape_dimensionality[0][i]):
+            if x==i and y==j:
+                # 变化的维度
+                tmp.append(-1)
+                continue
+            tmp.append(random.randint(min[i][j],max[i][j]))
+        shapes.append(tmp)
+
+    # list转化为tuple
+    result=[]
+    for i in range(len(shapes)):
+        result.append(tuple(shapes[i]))
+                               
+    return tuple(result)
+
+def translate_device_type(type_id)->str:
+    if type_id<0:
+        return "CPU"
+
+    return "GPU(" + str(type_id) + ")"
+
+
+def fix_json_config(log_file="create_dataset/datasets/dataset.json") ->None:
+    '''
+    delete un-exist dataset-items from json config
+    '''
+
+    log_dict = {}
+    if os.path.exists(log_file):
+        with open(log_file,'r') as f:
+            log_dict = json.load(f)
+
+    result = copy.deepcopy(log_dict)
+
+    for device_name,device_dict in log_dict.items():
+        if device_name=="count":
             continue
+        for function_name,function_dict in device_dict.items():
+            if function_name=="count":
+                continue
+            for device_type,device_type_dict in function_dict.items():
+                if device_type=="count":
+                    continue
+                for shape_dimensionality,shape_dimensionality_dict in device_type_dict.items():
+                    if shape_dimensionality=="count":
+                        continue
+                    for shapes_str,value in shape_dimensionality_dict.items():
+                        if shapes_str=="count":
+                            continue
+                        if not os.path.exists(value["file_path"]):
+                            del result[device_name][function_name][device_type][shape_dimensionality][shapes_str]           # 删除对应条目
 
-        for i_y in range(total_case[1]):
-            shape_y=[]
-            temp_y=i_y
-            # 生成shape y
-            for j_y in range(len(shapes_in_dimensionality[1])):
-                len_shape_y=len_shape_in_dimensionality[1][j_y]
-                
-                shape_y.append(shapes_in_dimensionality[1][j_y][int(temp_y % len_shape_y)])
-                temp_y = int(temp_y/len_shape_y)
+                            result[device_name][function_name][device_type][shape_dimensionality]["count"]-=1
+                            # 没有条目时，删除维度信息
+                            if result[device_name][function_name][device_type][shape_dimensionality]["count"]<=0:
+                                del result[device_name][function_name][device_type][shape_dimensionality] 
+       
+                            result[device_name][function_name][device_type]["count"]-=1
+                            # 没有条目时，删除硬件信息
+                            if result[device_name][function_name][device_type]["count"]<=0:
+                                del result[device_name][function_name][device_type]
 
-            shape_y=redress_dimensionality(shape_y)     # 第二个input的shape
-            if shape_y:
-                if limit(shape_x,shape_y):
-                    run_time = function["body"]([shape_x,shape_y],dtype,target=function["params"]["target"], device=function["params"]["device"])
+                            result[device_name][function_name]["count"]-=1
+                            # 没有条目时，删除算子信息
+                            if result[device_name][function_name]["count"]<=0:
+                                del result[device_name][function_name]
 
-                    # 打开一个文件
-                    fo.write(" ".join(str(m) for m in shape_x)+"|"+ " ".join(str(m) for m in shape_y) +","+str(run_time*1000000)+"\n")
+                            result[device_name]["count"]-=1
+                            # 没有条目时，删除设备信息
+                            if result[device_name]["count"]<=0:
+                                del result[device_name]
 
-    # 关闭打开的文件
-    fo.close()
+                            result["count"] -= 1 
+                            if result["count"] <= 0:
+                                result={"count": 0}
 
-def test_data_copy_time(input_dict,output, target="llvm", device=tvm.cpu(0),cycle_times=200, min_value=-100,max_value=100):
-    '''
-    Get the avg-first-run-time(s) of single op. 
-
-    Parameters
-    ----------
-    * input_dict:   give the real inputs. exp: { var_name_str: (shape,type)}
-    * output:   give the real output that is compute by inputs
-    * min_value ~ max_value:    when create the random input values, this gives the range.
-
-    Returns
-    ---------
-    the avg run time(second) with one kind of shape.
-
-    exp:
-    * GPU: target = "cuda", device = tvm.cuda(0)
-    * CPU: target = "llvm", device=tvm.cpu(0)
-    '''
-
-    func = relay.Function(relay.analysis.free_vars(output), output)
-    model = relay.transform.InferType()(tvm.ir.IRModule.from_expr(func))
-
-    with relay.build_config(opt_level=0):
-        graph, lib, params = relay.build(model, target=target, params={})
-
-    # 给模型赋初始值
-    # module = graph_runtime.create(graph, lib, device)
-    modules=[]
-    for i in range(cycle_times):
-        modules.append(graph_executor.create(graph, lib, device))
-
-    # 一次性随机生成所有输入矩阵
-    input_values={}
-    for key,size in input_dict.items():
-        input_values[key] = np.random.uniform(min_value, max_value, size=(cycle_times,*(size[0]))).astype(size[1])
-
-    total_time=0.0
-    for i in range(cycle_times):
-        for key,values in input_values.items():
-            modules[i].set_input(key, values[i])
-
-        # 测试时间,初次测量存在模型加载时间，手动去除
-        start = time.time()
-        modules[i].run()
-        single_t =time.time()-start
-
-        # print(single_t)
-
-        total_time+=single_t
-
-    return total_time/cycle_times
-    
+    with open(log_file,"w") as f:
+        json.dump(result,fp=f,indent=4,separators=(',', ': '),sort_keys=True)
