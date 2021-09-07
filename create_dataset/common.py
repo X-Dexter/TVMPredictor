@@ -61,6 +61,8 @@ def generate_datasets_with_one_dimensionality_changing(count,shape_dimensionalit
             counts.append(count -log_dict[device_name.lower()][function_dict["name"].lower()][str(device_params["type"])][str(shape_dimensionality)]["count"])
 
     if count<=0:
+        if show_print:
+            print("count(data) is enough.")
         return
 
     for i in range(count):
