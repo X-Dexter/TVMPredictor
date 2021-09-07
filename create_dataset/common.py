@@ -20,9 +20,28 @@ class Device:
 
 def generate_datasets_with_one_dimensionality_changing(count,shape_dimensionality,range_min,range_max,function_dict,min_shapes,max_shapes,sampling,force_shape_relation=None,dtype="float32",device_parame_array=[{"target": "llvm", "device": tvm.cpu(0),"type":-1}],cycle_times=200,min_repeat_ms=500,opt_level=0,fold_path="create_dataset/datasets/",device_name="dell04",dataset_config_name="dataset.json",show_print=True) ->None:
     '''
-    * shape_dimensionality: gives the shape info and changing dimensionality
-    * count: the datasets count will create.
-    * shapes[i][j] have range from range_min[i][j] to range_max[i][j].
+    * count: the datasets enum try best to generate.
+    * shape_dimensionality: gives the shape info and changing dimensionality. ((a,b,c),(x,y)) means there is three inputs, and the first input is a-d, the second input is b-d, the third input is c-d. The y-d of the x-th input is changing.
+    * range_min ~ range_max: gives the range when random generate the unchanging dimensionality.
+    * function_dict: < {"func": op-function, "name": "op-name"} > .  In which: op-function(shape_tuple, dtype) -> func
+    * min_shapes ~ max_shapes: give the range of the changing demensionality
+    * sampling: when ensure the range of the changing demensionality, sampling gives the sampling hit rate.
+    * force_shape_relation: gives the relation of every demensionality in every inputs reference to the shape of the changing input.
+    * opt_level:   The optimization level of this pass.[0-3?]. opt_level= 0 means disable optimization.
+    * dtype: when test the run time, the input data type
+    * device_parames_array: [device_parames_1, device_parames_2....]
+    * cycle_times: when test single-op, minimum test times
+    * min_repeat_ms: if time(op)*cycle_times < min_repeat_ms，test will go on until fit.
+
+    exp:
+    * GPU: target = "cuda", device = tvm.cuda(0)
+    * CPU: target = "llvm", device=tvm.cpu(0)
+
+    # ast.literal_eval("(255, 0, 0)") can get tuple(255,0,0)
+
+    Returns
+    ---------
+    no return value.
     '''
     log_file=os.path.join(fold_path,dataset_config_name)
     log_dict = {"count":0}
@@ -45,7 +64,6 @@ def generate_datasets_with_one_dimensionality_changing(count,shape_dimensionalit
         for device_params,left_count in zip(device_parame_array,counts):
             if i<left_count:
                 generate_dataset_with_one_dimensionality_changing(function_dict = function_dict,shapes=shapes,min_shapes=min_shapes,max_shapes=max_shapes,sampling=sampling,force_shape_relation=force_shape_relation,dtype=dtype,device_parames=device_params,cycle_times=cycle_times,min_repeat_ms=min_repeat_ms,opt_level=opt_level,fold_path=fold_path,device_name=device_name,dataset_config_name=dataset_config_name,show_print=show_print)
-
 
 def generate_dataset_with_one_dimensionality_changing(function_dict,shapes,min_shapes,max_shapes,sampling,force_shape_relation=None,dtype="float32",device_parames={"target": "llvm", "device": tvm.cpu(0),"type":-1},cycle_times=200,min_repeat_ms=500,opt_level=0,fold_path="create_dataset/datasets/",device_name="dell04",dataset_config_name="dataset.json",show_print=True) ->None:
     '''

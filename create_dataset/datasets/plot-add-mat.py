@@ -25,10 +25,15 @@ with open(json_path,'r') as f:
     log_dict = json.load(f)
 
 # name = "add"
-name = "mat-multiply"
+name = "add"
 shape_dimensionality=((3,3),(0,0))
 device_name="dell04"
 
+CPU_count=log_dict[device_name.lower()][name]["-1"][str(shape_dimensionality)]["count"]
+GPU_count=log_dict[device_name.lower()][name]["0"][str(shape_dimensionality)]["count"]
+
+# name = "add"
+name_mat = "mat-multiply"
 CPU_count=log_dict[device_name.lower()][name]["-1"][str(shape_dimensionality)]["count"]
 GPU_count=log_dict[device_name.lower()][name]["0"][str(shape_dimensionality)]["count"]
 
@@ -46,7 +51,16 @@ for key,value in log_dict[device_name][name]["-1"][str(shape_dimensionality)].it
         continue
     shape = ast.literal_eval(key)[0]
     img1 = plt.subplot(2, width, index)
-    plt.plot(*read_data(value["file_path"]),color=mycolor(index),label=str(shape))
+    
+    plot_data = [[],[]]
+    mul_data = read_data(log_dict[device_name][name_mat]["-1"][str(shape_dimensionality)][key]["file_path"])
+    add_data = read_data(value["file_path"])
+    for i in range(len(mul_data[0])):
+        plot_data[0].append(mul_data[0][i])
+        plot_data[1].append(mul_data[1][i]/add_data[1][i])
+    
+    plt.plot(tuple(plot_data[0]),tuple(plot_data[1]),color=mycolor(index),label=str(shape))
+    
     plt.legend() # 显示图例
     plt.xlabel("shape value")
     plt.ylabel("runtime(ms)")
@@ -66,7 +80,16 @@ for key,value in log_dict[device_name][name]["0"][str(shape_dimensionality)].ite
         continue
     shape = ast.literal_eval(key)[0]
     img1 = plt.subplot(2, width, index)
-    plt.plot(*read_data(value["file_path"]),color=mycolor(index-width),label=str(shape))
+    
+    plot_data = [[],[]]
+    mul_data = read_data(log_dict[device_name][name_mat]["0"][str(shape_dimensionality)][key]["file_path"])
+    add_data = read_data(value["file_path"])
+    for i in range(len(mul_data)):
+        plot_data[0].append(mul_data[0][i])
+        plot_data[1].append(mul_data[1][i]/add_data[1][i])
+    
+    plt.plot(tuple(plot_data[0]),tuple(plot_data[1]),color=mycolor(index),label=str(shape))
+     
     plt.legend() # 显示图例
     plt.xlabel("shape value")
     plt.ylabel("runtime(ms)")
@@ -78,6 +101,7 @@ for key,value in log_dict[device_name][name]["0"][str(shape_dimensionality)].ite
     plt.xlabel("shape value")
     plt.ylabel("runtime(ms)")
     img2.set_title("GPU-summay: "+name)
+
 
     index += 1
 
