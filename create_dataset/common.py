@@ -73,8 +73,9 @@ def generate_dataset_with_one_dimensionality_changing(function_dict,shapes,min_s
     # 生成不冲突的数据集路径
     x,y = search_changing_shape(shapes)
     shape_dimensionality_str = str((get_dimensionality(shapes),(x,y)))
+    real_shape = generate_shape(shapes,x,y,-1,force_shape_relation=force_shape_relation)
 
-    data_savepath = os.path.join(ensure_dir_exist(os.path.join(fold_path,device_name,function_dict["name"],str(device_parames["type"]),str(shape_dimensionality_str))),str(shapes)+".txt")
+    data_savepath = os.path.join(ensure_dir_exist(os.path.join(fold_path,device_name,function_dict["name"],str(device_parames["type"]),str(shape_dimensionality_str))),str(real_shape)+".txt")
 
     if os.path.exists(data_savepath) and show_print:
         print("exists and skip: %s"%(data_savepath))
@@ -90,7 +91,7 @@ def generate_dataset_with_one_dimensionality_changing(function_dict,shapes,min_s
     f_dataset.close()
 
     if show_print:
-        print("create:\n--op: %s\n--device: %s\n--shape: %s\n--file: %s\n\n"%(function_dict["name"].lower(),translate_device_type(device_parames["type"]),str(shapes),data_savepath))
+        print("create:\n--op: %s\n--device: %s\n--shape: %s\n--file: %s\n\n"%(function_dict["name"].lower(),translate_device_type(device_parames["type"]),str(real_shape),data_savepath))
 
     # 构建数据集存档信息
     log_file=os.path.join(fold_path,dataset_config_name)
@@ -122,14 +123,14 @@ def generate_dataset_with_one_dimensionality_changing(function_dict,shapes,min_s
         log_dict[device_name.lower()][function_dict["name"].lower()][str(device_parames["type"])][shape_dimensionality_str]["count"] = 0
 
     # 确保 输入shapes-->keys
-    if str(shapes) not in log_dict[device_name.lower()][function_dict["name"].lower()][str(device_parames["type"])][shape_dimensionality_str].keys():
-        log_dict[device_name.lower()][function_dict["name"].lower()][str(device_parames["type"])][shape_dimensionality_str][str(shapes)] = {}
+    if str(real_shape) not in log_dict[device_name.lower()][function_dict["name"].lower()][str(device_parames["type"])][shape_dimensionality_str].keys():
+        log_dict[device_name.lower()][function_dict["name"].lower()][str(device_parames["type"])][shape_dimensionality_str][str(real_shape)] = {}
         
     # 记录数据集文件名，shape形状，开始训练时间  
-    log_dict[device_name.lower()][function_dict["name"].lower()][str(device_parames["type"])][shape_dimensionality_str][str(shapes)]["file_path"]=data_savepath
-    log_dict[device_name.lower()][function_dict["name"].lower()][str(device_parames["type"])][shape_dimensionality_str][str(shapes)]["changed_shape"]=shape_dimensionality_str
-    log_dict[device_name.lower()][function_dict["name"].lower()][str(device_parames["type"])][shape_dimensionality_str][str(shapes)]["shapes"]=str(shapes)
-    log_dict[device_name.lower()][function_dict["name"].lower()][str(device_parames["type"])][shape_dimensionality_str][str(shapes)]["time"]= time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
+    log_dict[device_name.lower()][function_dict["name"].lower()][str(device_parames["type"])][shape_dimensionality_str][str(real_shape)]["file_path"]=data_savepath
+    log_dict[device_name.lower()][function_dict["name"].lower()][str(device_parames["type"])][shape_dimensionality_str][str(real_shape)]["changed_shape"]=shape_dimensionality_str
+    log_dict[device_name.lower()][function_dict["name"].lower()][str(device_parames["type"])][shape_dimensionality_str][str(real_shape)]["shapes"]=str(real_shape)
+    log_dict[device_name.lower()][function_dict["name"].lower()][str(device_parames["type"])][shape_dimensionality_str][str(real_shape)]["time"]= time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
     # 数量递增
     log_dict["count"] += 1
     log_dict[device_name.lower()]["count"] += 1

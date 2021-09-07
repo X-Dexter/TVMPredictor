@@ -24,7 +24,8 @@ log_dict = {}
 with open(json_path,'r') as f:
     log_dict = json.load(f)
 
-name = "add"
+# name = "add"
+name = "mat-multiply"
 shape_dimensionality=((3,3),(0,0))
 device_name="dell04"
 
