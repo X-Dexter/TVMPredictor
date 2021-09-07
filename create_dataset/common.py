@@ -29,9 +29,13 @@ def generate_datasets_with_one_dimensionality_changing(count,shape_dimensionalit
     * force_shape_relation: gives the relation of every demensionality in every inputs reference to the shape of the changing input.
     * opt_level:   The optimization level of this pass.[0-3?]. opt_level= 0 means disable optimization.
     * dtype: when test the run time, the input data type
-    * device_parames_array: [device_parames_1, device_parames_2....]
+    * device_parames_array: [device_parames_1, device_parames_2....]，reference to function<generate_dataset_with_one_dimensionality_changing>
     * cycle_times: when test single-op, minimum test times
     * min_repeat_ms: if time(op)*cycle_times < min_repeat_ms，test will go on until fit.
+    * fold_path: the save root fold for datasets
+    * device_name: the alias-name of device where you test op.
+    * dataset_config_name: the dataset config name, which record and organize the whole dataset. It's a good choice to keep the default value if you are not sure.
+    * show_print: show progress-information in terminal or not when generate the datasets.
 
     exp:
     * GPU: target = "cuda", device = tvm.cuda(0)
@@ -76,6 +80,16 @@ def generate_dataset_with_one_dimensionality_changing(function_dict,shapes,min_s
     * min_shapes ~ max_shapes: give the range of the changing dimensionality
     * sampling: sampling/100 gives the hit rate
     * opt_level:   The optimization level of this pass.[0-3?]. opt_level= 0 means disable optimization.
+    * dtype: when test the run time, the input data type
+    * device_parames_array: [device_parames_1, device_parames_2....]
+    * cycle_times: when test single-op, minimum test times
+    * min_repeat_ms: if time(op)*cycle_times < min_repeat_ms，test will go on until fit.
+    * cycle_times: when test single-op, minimum test times
+    * min_repeat_ms: if time(op)*cycle_times < min_repeat_ms，test will go on until fit.
+    * fold_path: the save root fold for datasets
+    * device_name: the alias-name of device where you test op.
+    * dataset_config_name: the dataset config name, which record and organize the whole dataset. It's a good choice to keep the default value if you are not sure.
+    * show_print: show progress-information in terminal or not when generate the datasets.
     * device_parames: type=-1: CPU, type=n: GPU(n)
 
     exp:
