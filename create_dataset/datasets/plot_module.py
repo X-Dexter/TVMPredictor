@@ -4,11 +4,24 @@ import ast
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from create_dataset.datasets.common import mycolor,read_data_from_path,calc_mul,get_database_json
+from create_dataset.datasets.common import read_data,mycolor
+
+def calc_mul(shape):
+    result = 1
+    for s in shape:
+        if s!=-1:
+            result*=s
+    
+    return result
 
 # 读取配置文件
 json_path = "create_dataset/datasets/dataset.json"
-log_dict = get_database_json(json_path)
+if not os.path.exists(json_path):
+    print("loss dataset json config")
+
+log_dict = {}
+with open(json_path,'r') as f:
+    log_dict = json.load(f)
 
 # name = "add"
 name = "conv2d"
@@ -31,8 +44,8 @@ for key in log_dict[device_name][name]["-1"][str(shape_dimensionality)].keys():
     if key=="count":
         continue
     shape = ast.literal_eval(key)[0]
-    CPU_data = read_data_from_path(log_dict[device_name][name]["-1"][str(shape_dimensionality)][key]["file_path"])
-    GPU_data = read_data_from_path(log_dict[device_name][name]["0"][str(shape_dimensionality)][key]["file_path"])
+    CPU_data = read_data(log_dict[device_name][name]["-1"][str(shape_dimensionality)][key]["file_path"])
+    GPU_data = read_data(log_dict[device_name][name]["0"][str(shape_dimensionality)][key]["file_path"])
     
     # 绘制CPU
     img1 = plt.subplot(3, width, index)

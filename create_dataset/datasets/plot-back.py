@@ -4,8 +4,7 @@ import ast
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from create_dataset.datasets.read_data import read_data
-from create_dataset.datasets.mycolor import mycolor
+from create_dataset.datasets.common import mycolor,read_data_from_path
 
 def calc_mul(shape):
     result = 1
@@ -46,14 +45,14 @@ for key,value in log_dict[device_name][name]["-1"][str(shape_dimensionality)].it
         continue
     shape = ast.literal_eval(key)[0]
     img1 = plt.subplot(2, width, index)
-    plt.plot(*read_data(value["file_path"]),color=mycolor(index),label=str(shape))
+    plt.plot(*read_data_from_path(value["file_path"]),color=mycolor(index),label=str(shape))
     plt.legend() # 显示图例
     plt.xlabel("shape value")
     plt.ylabel("runtime(ms)")
     img1.set_title("CPU: "+name)
     # 绘制第二个曲线
     img2=plt.subplot(2, width, width)
-    plt.plot(*read_data(value["file_path"]),color=mycolor(index),label=str(calc_mul(shape)))
+    plt.plot(*read_data_from_path(value["file_path"]),color=mycolor(index),label=str(calc_mul(shape)))
     plt.legend() # 显示图例
     plt.xlabel("shape value")
     plt.ylabel("runtime(ms)")
@@ -66,14 +65,14 @@ for key,value in log_dict[device_name][name]["0"][str(shape_dimensionality)].ite
         continue
     shape = ast.literal_eval(key)[0]
     img1 = plt.subplot(2, width, index)
-    plt.plot(*read_data(value["file_path"]),color=mycolor(index-width),label=str(shape))
+    plt.plot(*read_data_from_path(value["file_path"]),color=mycolor(index-width),label=str(shape))
     plt.legend() # 显示图例
     plt.xlabel("shape value")
     plt.ylabel("runtime(ms)")
     img1.set_title("GPU: "+name)
     # 绘制第二个曲线
     img2=plt.subplot(2, width, width*2)
-    plt.plot(*read_data(value["file_path"]),color=mycolor(index-width),label=str(calc_mul(shape)))
+    plt.plot(*read_data_from_path(value["file_path"]),color=mycolor(index-width),label=str(calc_mul(shape)))
     plt.legend() # 显示图例
     plt.xlabel("shape value")
     plt.ylabel("runtime(ms)")

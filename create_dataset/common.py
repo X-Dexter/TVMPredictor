@@ -18,7 +18,7 @@ class Device:
     device_params_GPU0 = {"target": "cuda", "device": tvm.cuda(0),"type":0}
     device_params_GPU1 = {"target": "cuda", "device": tvm.cuda(1),"type":1}
 
-def generate_datasets_with_one_dimensionality_changing(count,shape_dimensionality,range_min,range_max,function_dict,min_shapes,max_shapes,sampling,force_shape_relation=None,dtype="float32",device_parame_array=[{"target": "llvm", "device": tvm.cpu(0),"type":-1}],cycle_times=200,min_repeat_ms=500,opt_level=0,fold_path="create_dataset/datasets/",device_name="dell04",dataset_config_name="dataset.json",show_print=True) ->None:
+def generate_datasets_with_one_dimensionality_changing(count,shape_dimensionality,range_min,range_max,function_dict,min_shapes,max_shapes,sampling,force_shape_relation=None,dtype="float32",device_parame_array=[{"target": "llvm", "device": tvm.cpu(0),"type":-1}],cycle_times=200,min_repeat_ms=500,opt_level=0,fold_path="create_dataset/datasets/",device_name="dell04",dataset_config_name="dataset.json",show_print=True,isModule=False) ->None:
     '''
     * count: the datasets enum try best to generate.
     * shape_dimensionality: gives the shape info and changing dimensionality. ((a,b,c),(x,y)) means there is three inputs, and the first input is a-d, the second input is b-d, the third input is c-d. The y-d of the x-th input is changing.
@@ -36,6 +36,7 @@ def generate_datasets_with_one_dimensionality_changing(count,shape_dimensionalit
     * device_name: the alias-name of device where you test op.
     * dataset_config_name: the dataset config name, which record and organize the whole dataset. It's a good choice to keep the default value if you are not sure.
     * show_print: show progress-information in terminal or not when generate the datasets.
+    * isModule: true if func type is tvm.ir.module.IRModule.
 
     exp:
     * GPU: target = "cuda", device = tvm.cuda(0)
@@ -69,9 +70,9 @@ def generate_datasets_with_one_dimensionality_changing(count,shape_dimensionalit
         shapes = create_random_shape(shape_dimensionality,range_min,range_max)
         for device_params,left_count in zip(device_parame_array,counts):
             if i<left_count:
-                generate_dataset_with_one_dimensionality_changing(function_dict = function_dict,shapes=shapes,min_shapes=min_shapes,max_shapes=max_shapes,sampling=sampling,force_shape_relation=force_shape_relation,dtype=dtype,device_parames=device_params,cycle_times=cycle_times,min_repeat_ms=min_repeat_ms,opt_level=opt_level,fold_path=fold_path,device_name=device_name,dataset_config_name=dataset_config_name,show_print=show_print)
+                generate_dataset_with_one_dimensionality_changing(function_dict = function_dict,shapes=shapes,min_shapes=min_shapes,max_shapes=max_shapes,sampling=sampling,force_shape_relation=force_shape_relation,dtype=dtype,device_parames=device_params,cycle_times=cycle_times,min_repeat_ms=min_repeat_ms,opt_level=opt_level,fold_path=fold_path,device_name=device_name,dataset_config_name=dataset_config_name,show_print=show_print,isModule=isModule)
 
-def generate_dataset_with_one_dimensionality_changing(function_dict,shapes,min_shapes,max_shapes,sampling,force_shape_relation=None,dtype="float32",device_parames={"target": "llvm", "device": tvm.cpu(0),"type":-1},cycle_times=200,min_repeat_ms=500,opt_level=0,fold_path="create_dataset/datasets/",device_name="dell04",dataset_config_name="dataset.json",show_print=True) ->None:
+def generate_dataset_with_one_dimensionality_changing(function_dict,shapes,min_shapes,max_shapes,sampling,force_shape_relation=None,dtype="float32",device_parames={"target": "llvm", "device": tvm.cpu(0),"type":-1},cycle_times=200,min_repeat_ms=500,opt_level=0,fold_path="create_dataset/datasets/",device_name="dell04",dataset_config_name="dataset.json",show_print=True,isModule=False) ->None:
     '''
     save the op-time(ms) to disk-file when only a single dimensionality of one input-shape changing.
 
@@ -92,6 +93,7 @@ def generate_dataset_with_one_dimensionality_changing(function_dict,shapes,min_s
     * device_name: the alias-name of device where you test op.
     * dataset_config_name: the dataset config name, which record and organize the whole dataset. It's a good choice to keep the default value if you are not sure.
     * show_print: show progress-information in terminal or not when generate the datasets.
+    * isModule: true if func type is tvm.ir.module.IRModule.
     * device_parames: type=-1: CPU, type=n: GPU(n)
 
     exp:
@@ -120,8 +122,10 @@ def generate_dataset_with_one_dimensionality_changing(function_dict,shapes,min_s
 
     # 写入执行时间
     for i in range(len(dshape)):
-        runtime = test_op_time(function_dict["func"](generate_shape(shapes,x,y,dshape[i],force_shape_relation=force_shape_relation),dtype=dtype),device_parames=device_parames,cycle_times=cycle_times,min_repeat_ms=min_repeat_ms,opt_level=opt_level)
+        runtime = test_op_time(function_dict["func"](generate_shape(shapes,x,y,dshape[i],force_shape_relation=force_shape_relation),dtype=dtype),device_parames=device_parames,cycle_times=cycle_times,min_repeat_ms=min_repeat_ms,opt_level=opt_level,isModule=isModule)
         f_dataset.write(str(dshape[i])+","+str(runtime*1000)+"\n")
+        if isModule and show_print:
+            print(str(dshape[i])+","+str(runtime*1000))
     f_dataset.close()
 
     if show_print:
@@ -198,7 +202,7 @@ def get_dimensionality(shape) ->tuple:
         a.append(len(shape[i]))
     return tuple(a)
 
-def test_op_time(func, device_parames,cycle_times,min_repeat_ms,opt_level=0) -> float :
+def test_op_time(func, device_parames,cycle_times,min_repeat_ms,opt_level=0,isModule=False) -> float :
     '''
     Get the run-time(us) of single op with a certain shape on certain device.
 
@@ -206,6 +210,7 @@ def test_op_time(func, device_parames,cycle_times,min_repeat_ms,opt_level=0) -> 
     ----------
     * func_dict:   give the real inputs. exp: { "input_shapes": (shape1,shape2...), "function": function }, function is the output of the module function.
     * opt_level:   The optimization level of this pass.[0-3?]. opt_level= 0 means disable optimization.
+    * isModule: true if func type is tvm.ir.module.IRModule.
     * device_parames: 
 
     exp:
@@ -216,8 +221,11 @@ def test_op_time(func, device_parames,cycle_times,min_repeat_ms,opt_level=0) -> 
     ---------
     the avg run time(second) with one kind of shape.
     '''
-
-    model = relay.transform.InferType()(tvm.ir.IRModule.from_expr(relay.Function(relay.analysis.free_vars(func), func)))
+    model = None
+    if isModule:
+        model= relay.transform.InferType()(func)
+    else:
+        model = relay.transform.InferType()(tvm.ir.IRModule.from_expr(relay.Function(relay.analysis.free_vars(func), func)))
 
     with tvm.transform.PassContext(opt_level=opt_level):   
         lib = relay.build(model, target=device_parames["target"], params={})
