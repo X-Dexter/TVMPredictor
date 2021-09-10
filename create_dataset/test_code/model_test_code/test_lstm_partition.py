@@ -30,7 +30,7 @@ cycle_times=3
 min_repeat_ms=30
 opt_level=0
 fold_path="create_dataset/datasets/"
-device_name="dell04"
+device_name="dell03"
 show_print=True
 
 count3 = 1
