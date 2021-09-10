@@ -69,10 +69,12 @@ def read_data(device_name,device_type,shape_dimensionality,op_name, json_path="c
         return None
 
     datas = []
-    for shape_str,value_dict in database_json[device_name.lower()][op_name][str(device_type)][str(shape_dimensionality)]:
+    for shape_str,value_dict in database_json[device_name.lower()][op_name][str(device_type)][str(shape_dimensionality)].items():
+        if shape_str=="count":
+            continue
         file_path = value_dict["file_path"]
-        shape = ast.literal_eval(shape_str)
-        shape_changing = value_dict["changed_shape"]
+        shape = ast.literal_eval(value_dict["shapes"])
+        shape_changing = ast.literal_eval(value_dict["changed_shape"])
         time = value_dict["time"]
 
         tmp = []
@@ -94,9 +96,9 @@ def read_data(device_name,device_type,shape_dimensionality,op_name, json_path="c
 
 def myplot(data,color,label_type="shape",show_legend=True, show_xy_labels=True):
     if label_type=="shape":
-        plt.plot(data[0],data[1],color=color,label=str(data[3]))
+        plt.plot(data[0],data[1],color=color,label=str(data[2][0]))
     elif label_type=="size":
-        plt.plot(data[0],data[1],color=color,label=str(calc_mul(data[3])))
+        plt.plot(data[0],data[1],color=color,label=str(calc_mul(data[2][0])))
     else:
         plt.plot(data[0],data[1],color=color)
     
@@ -123,6 +125,6 @@ def data_div(a,b):
     for i in range(len(a[0])):
         xs.append(a[0][i])
         ys.append(a[1][i]/b[1][i])
-        result.append(tuple(xs),tuple(ys),a[2],a[3],a[4])
+    result.append((tuple(xs),tuple(ys),a[2],a[3],a[4]))
 
     return tuple(result)

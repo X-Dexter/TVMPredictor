@@ -1,5 +1,5 @@
 {
-    "count": 99,
+    "count": 100,
     "dell03": {
         "count": 5,
         "inception_v3": {
@@ -367,7 +367,7 @@
             },
             "count": 14
         },
-        "count": 94,
+        "count": 95,
         "inception_v3": {
             "-1": {
                 "((4,), (0, 0))": {
@@ -394,6 +394,21 @@
                 "count": 1
             },
             "count": 2
+        },
+        "lstm": {
+            "0": {
+                "((3, 3), (0, 1))": {
+                    "((5, -1, 10), (2, -1, 20))": {
+                        "changed_shape": "((3, 3), (0, 1))",
+                        "file_path": "create_dataset/datasets/dell04/lstm/0/((3, 3), (0, 1))/((5, -1, 10), (2, -1, 20)).txt",
+                        "shapes": "((5, -1, 10), (2, -1, 20))",
+                        "time": "2021-09-10 01:07:03"
+                    },
+                    "count": 1
+                },
+                "count": 1
+            },
+            "count": 1
         },
         "mat-multiply": {
             "-1": {
