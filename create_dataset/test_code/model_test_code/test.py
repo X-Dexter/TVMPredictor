@@ -4,7 +4,7 @@ run on TeslaT4:
 16:2521.94 ms,32:5152.75 ms,64:10310.36 ms,128:21304.56 ms,256:42367.17 ms,512: 85813.79 ms,1024:175231.19
 
 '''
-mod, params, input_shape, output_shape = get_network("mobilenet", (260,3,224,224), dtype="float32")
+mod, params, input_shape, output_shape = get_network("inception_v3", (200,3,299,299), dtype="float32")
 target = "cuda"
 
 lib = compile_without_log(mod, target, params)

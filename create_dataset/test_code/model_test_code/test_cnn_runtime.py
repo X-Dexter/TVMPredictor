@@ -81,13 +81,13 @@ cycle_times=3
 min_repeat_ms=30
 opt_level=0
 fold_path="create_dataset/datasets/"
-device_name="dell04"
+device_name="dell03"
 show_print=True
 
 count3 = 1
 force_shape_relation3=(None,)
 shapes_dimensionality3=((4,),(0,0))
-device_parame_array3 = [Device.device_params_GPU0,Device.device_params_CPU]
+device_parame_array3 = [Device.device_params_GPU0]
 
 range_min3 = ((-1,3,299,299),)
 range_max3 = ((-1,3,299,299),)

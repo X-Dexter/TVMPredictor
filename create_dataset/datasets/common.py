@@ -114,3 +114,15 @@ def calc_mul(shape):
             result*=s
     
     return result
+
+def data_div(a,b):
+    result = []
+
+    xs=[]
+    ys=[]
+    for i in range(len(a[0])):
+        xs.append(a[0][i])
+        ys.append(a[1][i]/b[1][i])
+        result.append(tuple(xs),tuple(ys),a[2],a[3],a[4])
+
+    return tuple(result)
